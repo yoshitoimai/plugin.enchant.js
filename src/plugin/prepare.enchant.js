@@ -59,7 +59,7 @@ enchant.Entity.prototype._intersectStrictOne = function(other) {
                     vy = py2 - py1;
                     c1 = (vx * dy1 - vy * dx1) / c;
                     c2 = (vx * dy2 - vy * dx2) / c;
-                    if (0 < c1 && c1 < 1 && 0 < c2 && c2 < 1) {
+                    if (0 <= c1 && c1 <= 1 && 0 <= c2 && c2 <= 1) {
                         return true;
                     }
                 }
