@@ -110,6 +110,10 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
         this._collisionRect;
         this._isCollisionState = false;
         this._isCollision = false;
+        this._isCollisionLeft = false;
+        this._isCollisionRight = false;
+        this._isCollisionTop = false;
+        this._isCollisionBottom = false;
         this._collisionObjects = new Array();;
         this._collisionDuplicateObjects = new Array();
         // moved
@@ -146,6 +150,10 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
         // judge collision Target
         this.addEventListener(Event.ENTER_FRAME, function(){
             this._isCollision = false;
+            this._isCollisionLeft = false;
+            this._isCollisionRight = false;
+            this._isCollisionTop = false;
+            this._isCollisionBottom = false;
             // collision Sprite
             if (this._collisionObjects.length > 0) {
                 for (var i = 0; i < this._collisionObjects.length; i++) {
@@ -183,6 +191,26 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
     isCollision: {
         get: function() {
             return this._isCollision;
+        }
+    },
+    isCollisionLeft: {
+        get: function() {
+            return this._isCollisionLeft;
+        }
+    },
+    isCollisionRight: {
+        get: function() {
+            return this._isCollisionRight;
+        }
+    },
+    isCollisionTop: {
+        get: function() {
+            return this._isCollisionTop;
+        }
+    },
+    isCollisionBottom: {
+        get: function() {
+            return this._isCollisionBottom;
         }
     },
     /**
@@ -299,10 +327,22 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
                 this._isCollision = true;
                 target._isCollisionState = true;
                 this._dispatchEventCollision(target);
-                if (targetRect.hitTest(_thisRect.left[0] - _offsetX, _thisRect.left[1] - _offsetY)) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_LEFT);
-                if (targetRect.hitTest(_thisRect.right[0] - _offsetX, _thisRect.right[1] - _offsetY)) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_RIGHT);
-                if (targetRect.hitTest(_thisRect.top[0] - _offsetX, _thisRect.top[1] - _offsetY)) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TOP);
-                if (targetRect.hitTest(_thisRect.bottom[0] - _offsetX, _thisRect.bottom[1] - _offsetY)) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_BOTTOM);
+                if (targetRect.hitTest(_thisRect.left[0] - _offsetX, _thisRect.left[1] - _offsetY)) {
+                    this._isCollisionLeft = true;
+                    this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_LEFT);
+                }
+                if (targetRect.hitTest(_thisRect.right[0] - _offsetX, _thisRect.right[1] - _offsetY)) {
+                    this._isCollisionRight = true;
+                    this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_RIGHT);
+                }
+                if (targetRect.hitTest(_thisRect.top[0] - _offsetX, _thisRect.top[1] - _offsetY)) {
+                    this._isCollisionTop = true;
+                    this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TOP);
+                }
+                if (targetRect.hitTest(_thisRect.bottom[0] - _offsetX, _thisRect.bottom[1] - _offsetY)) {
+                    this._isCollisionBottom = true;
+                    this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_BOTTOM);
+                }
                 return true;
             }
         } else {
@@ -317,20 +357,28 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
                 this._dispatchEventCollision(target);
                 // left
                 if (_targetRect.leftTop[0] < _thisRect.left[0] && _thisRect.left[0] < _targetRect.rightTop[0] &&
-                    _targetRect.leftBottom[1] < _thisRect.left[1] && _thisRect.left[1] < _targetRect.rightBottom[1])
+                    _targetRect.leftBottom[1] < _thisRect.left[1] && _thisRect.left[1] < _targetRect.rightBottom[1]) {
+                        this._isCollisionLeft = true;
                         this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_LEFT);
+                    }
                 // right
                 if (_targetRect.leftTop[0] < _thisRect.right[0] && _thisRect.right[0] < _targetRect.rightTop[0] &&
-                    _targetRect.leftBottom[1] < _thisRect.right[1] && _thisRect.right[1] < _targetRect.rightBottom[1])
+                    _targetRect.leftBottom[1] < _thisRect.right[1] && _thisRect.right[1] < _targetRect.rightBottom[1]) {
+                        this._isCollisionRight = true;
                         this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_RIGHT);
+                    }
                 // top
                 if (_targetRect.leftTop[0] < _thisRect.top[0] && _thisRect.top[0] < _targetRect.rightTop[0] &&
-                    _targetRect.leftBottom[1] < _thisRect.top[1] && _thisRect.top[1] < _targetRect.rightBottom[1])
+                    _targetRect.leftBottom[1] < _thisRect.top[1] && _thisRect.top[1] < _targetRect.rightBottom[1]) {
+                        this._isCollisionTop = true;
                         this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TOP);
+                    }
                 // bottom
                 if (_targetRect.leftTop[0] < _thisRect.bottom[0] && _thisRect.bottom[0] < _targetRect.rightTop[0] &&
-                    _targetRect.leftBottom[1] < _thisRect.bottom[1] && _thisRect.bottom[1] < _targetRect.rightBottom[1])
+                    _targetRect.leftBottom[1] < _thisRect.bottom[1] && _thisRect.bottom[1] < _targetRect.rightBottom[1]) {
+                        this._isCollisionBottom = true;
                         this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_BOTTOM);
+                    }
                 if (this._moved[0] < 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TO_LEFT);
                 if (this._moved[0] > 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TO_RIGHT);
                 if (this._moved[1] < 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TO_TOP);
