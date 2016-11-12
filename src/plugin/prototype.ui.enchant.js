@@ -1,8 +1,19 @@
 /**
  * @type {Object}
  */
-enchant.ui = { assets: ['pad.png', 'apad.png', 'icon0.png', 'font0.png'] };
+enchant.ui = enchant.ui || {};
+/**
+ * @namespace
+ */
+enchant.Event = enchant.Event || {};
 
+/**
+ * 左ボタンタップ時
+ */
+enchant.Event.INPUT_LEFT = 'inputleft';
+enchant.Event.INPUT_RIGHT = 'inputright';
+enchant.Event.INPUT_UP = 'inputup';
+enchant.Event.INPUT_DOWN = 'inputdown';
 /**
  * 方向キーパッドのクラス: Pad
  * @scope enchant.ui.Pad
@@ -13,11 +24,9 @@ enchant.ui.Pad = enchant.Class.create(enchant.Sprite, {
      * @constructs
      * @extends enchant.Sprite
      */
-    initialize: function() {
+    initialize: function(width, height) {
         var core = enchant.Core.instance;
-        var image = core.assets['pad.png'];
-        enchant.Sprite.call(this, image.width / 2, image.height);
-        this.image = image;
+        enchant.Sprite.call(this, width, height);
         this.input = { left: false, right: false, up: false, down: false };
         this.addEventListener('touchstart', function(e) {
             this._updateInput(this._detectInput(e.localX, e.localY));
@@ -28,12 +37,18 @@ enchant.ui.Pad = enchant.Class.create(enchant.Sprite, {
         this.addEventListener('touchend', function(e) {
             this._updateInput({ left: false, right: false, up: false, down: false });
         });
+        this.addEventListener('enterframe', function(e) {
+            if (core.input.left) this.dispatchEvent(new Event(Event.INPUT_LEFT));
+            if (core.input.right) this.dispatchEvent(new Event(Event.INPUT_RIGHT));
+            if (core.input.up) this.dispatchEvent(new Event(Event.INPUT_UP));
+            if (core.input.down) this.dispatchEvent(new Event(Event.INPUT_DOWN));
+        });
     },
     _detectInput: function(x, y) {
         x -= this.width / 2;
         y -= this.height / 2;
         var input = { left: false, right: false, up: false, down: false };
-        if (x * x + y * y > 200) {
+        if (x * x + y * y > this.width + this.height) {
             if (x < 0 && y < x * x * 0.1 && y > x * x * -0.1) {
                 input.left = true;
             }
