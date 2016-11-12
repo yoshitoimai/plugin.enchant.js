@@ -97,9 +97,9 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
         this._collisionObjects = new Array();;
         this._collisionDuplicateObjects = new Array();
         // moved
-        this._moved = {x: 0, y: 0};
+        this._moved = [];
         // history
-        this._history = {x: this.x, y: this.y};
+        this._history = [];
         // collision Based
         this.COLLISION = {
             INTERSECT_BASED: "intersect",
@@ -115,16 +115,16 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
 
         // Event Added to scene
         this.addEventListener(Event.ADDED_TO_SCENE, function(){
-            this._history.x = this.x;
-            this._history.y = this.y;
+            var _rect = this.getOrientedBoundingRect();
+            this._history = _rect.leftTop;;
         });
 
         // for follow
         this.addEventListener(Event.ENTER_FRAME, function(){
-            this._moved.x = this.x - this._history.x;
-            this._moved.y = this.y - this._history.y;
-            this._history.x = this.x;
-            this._history.y = this.y;
+            var _rect = this.getOrientedBoundingRect();
+            this._moved[0] = _rect.leftTop[0] - this._history[0];
+            this._moved[1] = _rect.leftTop[1] - this._history[1];
+            this._history = this._moved;
         });
 
         // judge collision Target
@@ -268,15 +268,15 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
             this._isCollision = true;
             target._isCollisionState = true;
             this._dispatchEventCollision(target);
-            if (this._moved.x < 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TO_LEFT);
-            if (this._moved.x > 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TO_RIGHT);
-            if (this._moved.y < 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TO_TOP);
-            if (this._moved.y > 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TO_BOTTOM);
+            if (this._moved[0] < 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TO_LEFT);
+            if (this._moved[0] > 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TO_RIGHT);
+            if (this._moved[1] < 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TO_TOP);
+            if (this._moved[1] > 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TO_BOTTOM);
             if (target._moved) {
-                if (target._moved.x > 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_FROM_LEFT);
-                if (target._moved.x < 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_FROM_RIGHT);
-                if (target._moved.y > 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_FROM_TOP);
-                if (target._moved.y < 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_FROM_BOTTOM);
+                if (target._moved[0] > 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_FROM_LEFT);
+                if (target._moved[0] < 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_FROM_RIGHT);
+                if (target._moved[1] > 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_FROM_TOP);
+                if (target._moved[1] < 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_FROM_BOTTOM);
             }
             return true;
         }
@@ -329,14 +329,14 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
         if (this._forrowBased == this.FORROW.RELATIVE_BASED) {
             this.addEventListener(Event.ENTER_FRAME, function() {
                 this._followArg = arguments.callee;
-                this.x += target._moved.x;
-                this.y += target._moved.y;
+                this.x += target._moved[0];
+                this.y += target._moved[1];
             });
         } else {
             this.addEventListener(Event.ENTER_FRAME, function() {
                 this._followArg = arguments.callee;
-                this.x += target._moved.x;
-                this.y += target._moved.y;
+                this.x += target._moved[0];
+                this.y += target._moved[1];
             });
         }
     },
