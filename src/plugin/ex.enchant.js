@@ -266,6 +266,7 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
                 _rect.leftBottom[0] + (_rect.rightBottom[0] - _rect.leftBottom[0]) / 2,
                 _rect.leftBottom[1]
             ];
+            return _rect;
         };
         var _thisRect = thisRect.getOrientedBoundingRect();
         _thisRect = _addRect(_thisRect);
