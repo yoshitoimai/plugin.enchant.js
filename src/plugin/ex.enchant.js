@@ -40,6 +40,22 @@ enchant.Event.COLLISION_TICK = 'collisiontick';
 /**
  * 左側が衝突したとき発生するイベント。
  */
+enchant.Event.COLLISION_LEFT = 'collisionleft';
+/**
+ * 右側が衝突したとき発生するイベント。
+ */
+enchant.Event.COLLISION_RIGHT = 'collisionright';
+/**
+ * 下端が衝突したとき発生するイベント。
+ */
+enchant.Event.COLLISION_BOTTOM = 'collisionbottom';
+/**
+ * 上端が衝突したとき発生するイベント。
+ */
+enchant.Event.COLLISION_TOP = 'collisiontop';
+/**
+ * 左側が衝突したとき発生するイベント。
+ */
 enchant.Event.COLLISION_TO_LEFT = 'collisiontoleft';
 /**
  * 右側が衝突したとき発生するイベント。
@@ -229,33 +245,64 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
         var result = false;
         var thisRect = this._collisionRect ? this._collisionRect : this;
         var targetRect = target._collisionRect ? target._collisionRect : target;
+        var _addRect = function(_rect) {
+            _rect.center = [
+                _rect.leftTop[0] + (_rect.rightTop[0] - _rect.leftTop[0]) / 2,
+                _rect.leftTop[1] + (_rect.leftBottom[1] - _rect.leftTop[1]) / 2
+            ];
+            _rect.left = [
+                _rect.leftTop[0],
+                _rect.leftTop[1] + (_rect.leftBottom[1] - _rect.leftTop[1]) / 2
+            ];
+            _rect.right = [
+                _rect.rightTop[0],
+                _rect.rightTop[1] + (_rect.rightBottom[1] - _rect.rightTop[1]) / 2
+            ];
+            _rect.top = [
+                _rect.leftTop[0] + (_rect.rightTop[0] - _rect.leftTop[0]) / 2,
+                _rect.leftTop[1]
+            ];
+            _rect.bottom = [
+                _rect.leftBottom[0] + (_rect.rightBottom[0] - _rect.leftBottom[0]) / 2,
+                _rect.leftBottom[1]
+            ];
+        };
+        var _thisRect = thisRect.getOrientedBoundingRect();
+        _thisRect = _addRect(_thisRect);
+        var _targetRect = targetRect.getOrientedBoundingRect();
+        _targetRect = _addRect(_targetRect);        
         if (target instanceof Map) {
             result = true;
             target.collisionTile = null;
             var _offsetX = targetRect._offsetX;
             var _offsetY = targetRect._offsetY;
-            var _rect = thisRect.getOrientedBoundingRect();
-            _rect.center = [
-                _rect.leftTop[0] + (_rect.rightTop[0] - _rect.leftTop[0]) / 2,
-                _rect.leftTop[1] + (_rect.leftBottom[1] - _rect.leftTop[1]) / 2
-            ];
             // Center
-            if (targetRect.hitTest(_rect.center[0] - _offsetX, _rect.center[1] - _offsetY)) {
-                target.collisionTile = targetRect.checkTile(_rect.leftTop[0] - _offsetX, _rect.leftTop[1] - _offsetY);
+            if (targetRect.hitTest(_thisRect.center[0] - _offsetX, _thisRect.center[1] - _offsetY)) {
+                target.collisionTile = targetRect.checkTile(_thisRect.leftTop[0] - _offsetX, _thisRect.leftTop[1] - _offsetY);
             // TopLeft
-            } else if (targetRect.hitTest(_rect.leftTop[0] - _offsetX, _rect.leftTop[1] - _offsetY)) {
-                target.collisionTile = targetRect.checkTile(_rect.leftTop[0] - _offsetX, _rect.leftTop[1] - _offsetY);
+            } else if (targetRect.hitTest(_thisRect.leftTop[0] - _offsetX, _thisRect.leftTop[1] - _offsetY)) {
+                target.collisionTile = targetRect.checkTile(_thisRect.leftTop[0] - _offsetX, _thisRect.leftTop[1] - _offsetY);
             // TopRight
-            } else if (targetRect.hitTest(_rect.rightTop[0] - _offsetX, _rect.rightTop[1] - _offsetY)) {
-                target.collisionTile = targetRect.checkTile(thisRect._offsetX + thisRect.width - _offsetX, thisRect._offsetY - _offsetY);
+            } else if (targetRect.hitTest(_thisRect.rightTop[0] - _offsetX, _thisRect.rightTop[1] - _offsetY)) {
+                target.collisionTile = targetRect.checkTile(_thisRect.rightTop[0] - _offsetX, _thisRect.rightTop[1] - _offsetY);
             // LeftBottom
-            } else if (targetRect.hitTest(_rect.leftBottom[0] - _offsetX, _rect.leftBottom[1] - _offsetY)) {
-                target.collisionTile = targetRect.checkTile(thisRect._offsetX - _offsetX, thisRect._offsetY + thisRect.height - _offsetY);
+            } else if (targetRect.hitTest(_thisRect.leftBottom[0] - _offsetX, _thisRect.leftBottom[1] - _offsetY)) {
+                target.collisionTile = targetRect.checkTile(_thisRect.leftBottom[0] - _offsetX, _thisRect.leftBottom[1] - _offsetY);
             // RightBottom
-            } else if (targetRect.hitTest(_rect.rightBottom[0] - _offsetX, _rect.rightBottom[1] - _offsetY)) {
-                target.collisionTile = targetRect.checkTile(thisRect._offsetX + thisRect.width - _offsetX, thisRect._offsetY + thisRect.height - _offsetY);
+            } else if (targetRect.hitTest(_thisRect.rightBottom[0] - _offsetX, _thisRect.rightBottom[1] - _offsetY)) {
+                target.collisionTile = targetRect.checkTile(_thisRect.rightBottom[0] - _offsetX, _thisRect.rightBottom[1] - _offsetY);
             } else {
                 result = false;
+            }
+            if (result) {
+                this._isCollision = true;
+                target._isCollisionState = true;
+                this._dispatchEventCollision(target);
+                if (targetRect.hitTest(_thisRect.left[0] - _offsetX, _thisRect.left[1] - _offsetY)) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_LEFT);
+                if (targetRect.hitTest(_thisRect.right[0] - _offsetX, _thisRect.right[1] - _offsetY)) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_RIGHT);
+                if (targetRect.hitTest(_thisRect.top[0] - _offsetX, _thisRect.top[1] - _offsetY)) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TOP);
+                if (targetRect.hitTest(_thisRect.bottom[0] - _offsetX, _thisRect.bottom[1] - _offsetY)) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_BOTTOM);
+                return true;
             }
         } else {
             if (this._collisionBased == this.COLLISION.INTERSECT_BASED) {
@@ -263,22 +310,38 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
             } else {
                 result = thisRect.within(targetRect, (thisRect.width + thisRect.height) / 4 + (targetRect.width + targetRect.height) / 4);
             }
-        }
-        if (result) {
-            this._isCollision = true;
-            target._isCollisionState = true;
-            this._dispatchEventCollision(target);
-            if (this._moved[0] < 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TO_LEFT);
-            if (this._moved[0] > 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TO_RIGHT);
-            if (this._moved[1] < 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TO_TOP);
-            if (this._moved[1] > 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TO_BOTTOM);
-            if (target._moved) {
-                if (target._moved[0] > 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_FROM_LEFT);
-                if (target._moved[0] < 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_FROM_RIGHT);
-                if (target._moved[1] > 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_FROM_TOP);
-                if (target._moved[1] < 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_FROM_BOTTOM);
+            if (result) {
+                this._isCollision = true;
+                target._isCollisionState = true;
+                this._dispatchEventCollision(target);
+                // left
+                if (_targetRect.leftTop[0] < _thisRect.left[0] && _thisRect.left[0] < _targetRect.rightTop[0] &&
+                    _targetRect.leftBottom[1] < _thisRect.left[1] && _thisRect.left[1] < _targetRect.rightBottom[1])
+                        this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_LEFT);
+                // right
+                if (_targetRect.leftTop[0] < _thisRect.right[0] && _thisRect.right[0] < _targetRect.rightTop[0] &&
+                    _targetRect.leftBottom[1] < _thisRect.right[1] && _thisRect.right[1] < _targetRect.rightBottom[1])
+                        this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_RIGHT);
+                // top
+                if (_targetRect.leftTop[0] < _thisRect.top[0] && _thisRect.top[0] < _targetRect.rightTop[0] &&
+                    _targetRect.leftBottom[1] < _thisRect.top[1] && _thisRect.top[1] < _targetRect.rightBottom[1])
+                        this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TOP);
+                // bottom
+                if (_targetRect.leftTop[0] < _thisRect.bottom[0] && _thisRect.bottom[0] < _targetRect.rightTop[0] &&
+                    _targetRect.leftBottom[1] < _thisRect.bottom[1] && _thisRect.bottom[1] < _targetRect.rightBottom[1])
+                        this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_BOTTOM);
+                if (this._moved[0] < 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TO_LEFT);
+                if (this._moved[0] > 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TO_RIGHT);
+                if (this._moved[1] < 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TO_TOP);
+                if (this._moved[1] > 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TO_BOTTOM);
+                if (target._moved) {
+                    if (target._moved[0] > 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_FROM_LEFT);
+                    if (target._moved[0] < 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_FROM_RIGHT);
+                    if (target._moved[1] > 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_FROM_TOP);
+                    if (target._moved[1] < 0) this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_FROM_BOTTOM);
+                }
+                return true;
             }
-            return true;
         }
         target._isCollisionState = false;
         return false;
