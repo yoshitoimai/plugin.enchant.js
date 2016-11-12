@@ -124,7 +124,7 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
             var _rect = this.getOrientedBoundingRect();
             this._moved[0] = _rect.leftTop[0] - this._history[0];
             this._moved[1] = _rect.leftTop[1] - this._history[1];
-            this._history = this._moved;
+            this._history = _rect.leftTop;
         });
 
         // judge collision Target
