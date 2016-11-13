@@ -120,8 +120,8 @@ enchant.Node.prototype.alignHorizontalCenterIn = function(another) {
     var parentNode = this.parentNode;
     if (another) parentNode = another;
     if (parentNode) {
-        this.x = ~~(parentNode.width / 2) - ~~(this.width / 2);
-    } 
+        this.x = parentNode.x + ~~(parentNode.width / 2) - ~~(this.width / 2);
+    }
 };
 /**
  * 指定オブジェクト内でy方向の中央寄せを行う。
@@ -131,8 +131,8 @@ enchant.Node.prototype.alignVerticalCenterIn = function(another) {
     var parentNode = this.parentNode;
     if (another) parentNode = another;
     if (parentNode) {
-        this.y = ~~(parentNode.height / 2) - ~~(this.height / 2);
-    } 
+        this.y = parentNode.y + ~~(parentNode.height / 2) - ~~(this.height / 2);
+    }
 };
 
 /**
@@ -179,3 +179,46 @@ enchant.Node.prototype.removeRangeOfMotion = function(origin, rangeTop, rangeBot
         this._rangeOfMotionArg = null;
     }
 };
+enchant.Sprite.prototype.border = function(width, color, radius) {
+    var surface = new Surface(this.width, this.height);
+    if (this.image) surface.draw(this.image);
+    this.image = surface;
+    surface.context.lineWidth = width;
+    surface.context.strokeStyle = color;
+    roundedRect(surface, 0, 0, surface.width, surface.height, radius);
+    function roundedRect(surface, x, y, width, height, radius){
+        var ctx = surface.context;
+        var image = surface.clone();
+        surface.clear();
+        var margin = ctx.lineWidth / 2;
+        //x += margin; y += margin; width -= margin*2; height -= margin*2;
+        ctx.beginPath();
+        ctx.moveTo(x, y + radius);
+        ctx.arcTo(x, y + height, x + radius, y + height, radius);
+        ctx.arcTo(x + width, y + height, x + width, y + height - radius, radius);
+        ctx.arcTo(x + width, y, x + width - radius, y, radius);
+        ctx.arcTo(x, y, x, y + radius, radius);
+        ctx.closePath();
+        ctx.clip();
+        surface.draw(image);
+        ctx.stroke();
+    }
+};
+
+enchant.Label.prototype.setText = function(text) {
+    if (!text) return;
+    if (!this.arrayText) this.arrayText = [];
+    if (this.arrayText.length == 0) this.text = "";
+    this.arrayText = this.arrayText.concat(text.split(""));
+    if (!this.setTextArg) {
+        this.addEventListener(Event.ENTER_FRAME, function() {
+            this.setTextArg = arguments.callee;
+            this.text += this.arrayText.shift();
+            if (this.arrayText.length == 0) {
+                this.removeEventListener(Event.ENTER_FRAME, this.setTextArg );
+                this.setTextArg = null;
+            }
+        });
+    }
+}
+
