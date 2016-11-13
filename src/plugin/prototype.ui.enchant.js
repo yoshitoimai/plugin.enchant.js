@@ -25,6 +25,12 @@ enchant.ui.Pad = enchant.Class.create(enchant.Sprite, {
      * @extends enchant.Sprite
      */
     initialize: function(width, height) {
+        // switching Based
+        this.AXIS = {
+            AXIS_4_BASED: "axis4",
+            AXIS_8_BASED: "axis8"
+        };
+        this._axisBased = this.AXIS.AXIS_4_BASED;
         var core = enchant.Core.instance;
         enchant.Sprite.call(this, width, height);
         this.input = { left: false, right: false, up: false, down: false };
@@ -49,17 +55,32 @@ enchant.ui.Pad = enchant.Class.create(enchant.Sprite, {
         y -= this.height / 2;
         var input = { left: false, right: false, up: false, down: false };
         if (x * x + y * y > this.width + this.height) {
-            if (x < 0 && y < x * x * 0.1 && y > x * x * -0.1) {
-                input.left = true;
-            }
-            if (x > 0 && y < x * x * 0.1 && y > x * x * -0.1) {
-                input.right = true;
-            }
-            if (y < 0 && x < y * y * 0.1 && x > y * y * -0.1) {
-                input.up = true;
-            }
-            if (y > 0 && x < y * y * 0.1 && x > y * y * -0.1) {
-                input.down = true;
+            if (this._axisBased == this.AXIS.AXIS_4_BASED) {
+                if (x < 0 && y * y < x * x) {
+                    input.left = true;
+                }
+                if (x > 0 && y * y < x * x) {
+                    input.right = true;
+                }
+                if (y < 0 && x * x < y * y) {
+                    input.up = true;
+                }
+                if (y > 0 && x * x < y * y) {
+                    input.down = true;
+                }
+            } else if (this._axisBased == this.AXIS.AXIS_8_BASED) {
+                if (x < 0 && y < x * x * 0.1 && y > x * x * -0.1) {
+                    input.left = true;
+                }
+                if (x > 0 && y < x * x * 0.1 && y > x * x * -0.1) {
+                    input.right = true;
+                }
+                if (y < 0 && x < y * y * 0.1 && x > y * y * -0.1) {
+                    input.up = true;
+                }
+                if (y > 0 && x < y * y * 0.1 && x > y * y * -0.1) {
+                    input.down = true;
+                }
             }
         }
         return input;
@@ -75,5 +96,11 @@ enchant.ui.Pad = enchant.Class.create(enchant.Sprite, {
             }
         }, this);
         this.input = input;
+    },
+    setAxis4Based: function() {
+        this._axisBased = this.AXIS.AXIS_4_BASED;
+    },
+    setAxis8Based: function() {
+        this._axisBased = this.AXIS.AXIS_8_BASED;
     }
 });
