@@ -120,6 +120,7 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
         this._moved = [];
         // history
         this._history = [];
+        this._historyOffset = [];
         // collision Based
         this.COLLISION = {
             INTERSECT_BASED: "intersect",
@@ -136,15 +137,26 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
         // Event Added to scene
         this.addEventListener(Event.ADDED_TO_SCENE, function(){
             var _rect = this.getOrientedBoundingRect();
-            this._history = _rect.leftTop;;
+            this._historyOffset[0] = _rect.leftTop;
+            this._historyOffset[1] = _rect.leftTop;
+            this._history[0] = {x:this.x, y:this.y};
+            this._history[1] = {x:this.x, y:this.y};
         });
 
         // for follow
         this.addEventListener(Event.ENTER_FRAME, function(){
             var _rect = this.getOrientedBoundingRect();
-            this._moved[0] = _rect.leftTop[0] - this._history[0];
-            this._moved[1] = _rect.leftTop[1] - this._history[1];
-            this._history = _rect.leftTop;
+            this._moved[0] = _rect.leftTop[0] - this._historyOffset[0][0];
+            this._moved[1] = _rect.leftTop[1] - this._historyOffset[0][1];
+            //this._historyOffset[0] = _rect.leftTop;
+            if (this._historyOffset[0] != _rect.leftTop) {
+                this._historyOffset[1] = this._historyOffset[0];
+                this._historyOffset[0] = _rect.leftTop;
+            }
+            if (this._history[0].x != this.x || this._history[0].y != this.y) {
+                this._history[1] = this._history[0];
+                this._history[0] = {x:this.x, y:this.y};
+            }
         });
 
         // judge collision Target
@@ -174,6 +186,16 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
             }
         });
 
+    },
+    history: {
+        get: function() {
+            return {
+                x: this._history[1].x,
+                y: this._history[1].y,
+                offsetX: this._historyOffset[1][0],
+                offsetY: this._historyOffset[1][1]
+            };
+        }
     },
     /**
      * 衝突判定の対象を設定します。
