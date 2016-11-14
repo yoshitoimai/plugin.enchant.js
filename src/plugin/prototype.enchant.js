@@ -205,20 +205,14 @@ enchant.Sprite.prototype.border = function(width, color, radius) {
     }
 };
 
-enchant.Label.prototype.setText = function(text) {
-    if (!text) return;
+enchant.Label.prototype.delayText = function(delayTime) {
     if (!this.arrayText) this.arrayText = [];
-    if (this.arrayText.length == 0) this.text = "";
-    this.arrayText = this.arrayText.concat(text.split(""));
-    if (!this.setTextArg) {
-        this.addEventListener(Event.ENTER_FRAME, function() {
-            this.setTextArg = arguments.callee;
-            this.text += this.arrayText.shift();
-            if (this.arrayText.length == 0) {
-                this.removeEventListener(Event.ENTER_FRAME, this.setTextArg );
-                this.setTextArg = null;
-            }
-        });
+    this.arrayText = this.arrayText.concat(this.text.split(""));
+    this.text = "";
+    _this = this;
+    for (var i=0; i < this.arrayText.length; i++) {
+        setTimeout(function() {
+            _this.text += _this.arrayText.shift();
+        }, i * delayTime);
     }
 }
-
