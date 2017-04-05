@@ -188,9 +188,6 @@ enchant.Node.prototype.removeRangeOfMotion = function(origin, rangeTop, rangeBot
         this._rangeOfMotionArg = null;
     }
 };
-enchant.Node.prototype._followTarget = null;
-enchant.Node.prototype._followTargetHistory = {};
-enchant.Node.prototype._followArg = null;
 enchant.Node.prototype.isfollowRelativeBased = true;
 enchant.Node.prototype.setfollowRelativeBased = function() {
     this.isfollowRelativeBased = true;
@@ -216,19 +213,19 @@ enchant.Node.prototype.setfollowAbsoluteBased = function() {
 enchant.Node.prototype.follow = function(target) {
     this.unfollow();
     this._followTarget = target;
+    this._followTargetHistory = {};
     this._followTargetHistory.x = this._followTarget.x;
     this._followTargetHistory.y = this._followTarget.y;
-   if (this.isfollowRelativeBased == true) {
-        this.addEventListener(Event.ENTER_FRAME, function() {
-            this._followArg = arguments.callee;
+    this.addEventListener(Event.ENTER_FRAME, function() {
+        this._followArg = arguments.callee;
+        if (this.isfollowRelativeBased == true) {
             this.x += this._followTarget.x - this._followTargetHistory.x;
             this.y += this._followTarget.y - this._followTargetHistory.y;
             this._followTargetHistory.x = this._followTarget.x;
             this._followTargetHistory.y = this._followTarget.y;
-
-        });
-    } else {
-    }
+        } else {
+        }
+    });
 }
 /**
  * followを解除します。
