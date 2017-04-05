@@ -1,4 +1,8 @@
 /**
+ * Entity
+ */
+
+/**
  * 表示枠矩形のＸ座標の中心を設定します。
  * @return {Number} Ｘ座標の中心座標
  * @example
@@ -112,6 +116,11 @@ enchant.Entity.prototype.setMaxX = function(x) {
 enchant.Entity.prototype.setMaxY = function(y) {
     this.y = y - this.height;
 };
+
+/**
+ * Node
+ */
+
 /**
  * 指定オブジェクト内でx方向の中央寄せを行う。
  * @param {Object} [another] 基準となるオブジェクト。（省略時は親Nodeとなる）
@@ -179,6 +188,62 @@ enchant.Node.prototype.removeRangeOfMotion = function(origin, rangeTop, rangeBot
         this._rangeOfMotionArg = null;
     }
 };
+enchant.Node.prototype._followTarget = null;
+enchant.Node.prototype._followTargetHistory = {};
+enchant.Node.prototype._followArg = null;
+enchant.Node.prototype.isfollowRelativeBased = true;
+enchant.Node.prototype.setfollowRelativeBased = function() {
+    this.isfollowRelativeBased = true;
+}
+enchant.Node.prototype.setfollowAbsoluteBased = function() {
+    this.isfollowRelativeBased = false;
+}
+/**
+ * ターゲットに指定したNodeと一緒に移動します。
+ * @param {enchant.Node} target ターゲットを指定します。
+ * @example
+ * var target = new Sprite(32, 32);
+ * core.rootScene.addChild(target);
+ *
+ * var sprite = new Sprite(32, 32);
+ * sprite.follow(target);
+ * core.rootScene.addChild(sprite);
+ *
+ * target.tl.moveTo(10, 10, 10);
+ * //sprite.tl.moveTo(10, 10, 10);
+ *
+ */
+enchant.Node.prototype.follow = function(target) {
+    this.unfollow();
+    this._followTarget = target;
+    this._followTargetHistory.x = this._followTarget.x;
+    this._followTargetHistory.y = this._followTarget.y;
+   if (this.isfollowRelativeBased == true) {
+        this.addEventListener(Event.ENTER_FRAME, function() {
+            this._followArg = arguments.callee;
+            this.x += this._followTarget.x - this._followTargetHistory.x;
+            this.y += this._followTarget.y - this._followTargetHistory.y;
+            this._followTargetHistory.x = this._followTarget.x;
+            this._followTargetHistory.y = this._followTarget.y;
+
+        });
+    } else {
+    }
+}
+/**
+ * followを解除します。
+ */
+enchant.Node.prototype.unfollow = function() {
+    if (this._followArg) {
+        this.removeEventListener(Event.ENTER_FRAME, this._followArg);
+        this._followArg = null;
+    }
+}
+
+/**
+ * Sprite
+ */
+
 enchant.Sprite.prototype.border = function(width, color, radius) {
     var surface = new Surface(this.width, this.height);
     if (this.image) surface.draw(this.image);
@@ -204,6 +269,10 @@ enchant.Sprite.prototype.border = function(width, color, radius) {
         ctx.stroke();
     }
 };
+
+/**
+ * Label
+ */
 
 enchant.Label.prototype.delayText = function(delayTime) {
     if (!this.arrayText) this.arrayText = [];

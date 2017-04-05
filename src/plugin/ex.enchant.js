@@ -104,8 +104,6 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
     initialize: function(width, height){
         enchant.Sprite.call(this, width, height);
 
-        // Event arguments
-        this._followArg;
         // collision
         this._collisionRect;
         this._isCollisionState = false;
@@ -127,12 +125,6 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
             WITHIN_BASED: "within"
         };
         this._collisionBased = this.COLLISION.INTERSECT_BASED;
-        // forrow Based
-        this.FORROW = {
-            ABSOLUTE_BASED: "absolute",
-            RELATIVE_BASED: "relative"
-        };
-        this._forrowBased = this.FORROW.RELATIVE_BASED;
 
         // Event Added to scene
         this.addEventListener(Event.ADDED_TO_SCENE, function(){
@@ -321,7 +313,7 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
         var _thisRect = thisRect.getOrientedBoundingRect();
         _thisRect = _addRect(_thisRect);
         var _targetRect = targetRect.getOrientedBoundingRect();
-        _targetRect = _addRect(_targetRect);        
+        _targetRect = _addRect(_targetRect);
         if (target instanceof Map) {
             result = true;
             target.collisionTile = null;
@@ -442,52 +434,6 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
         e.collision.target = target;
         e.collisionTarget = target;
         this.dispatchEvent(e);
-    },
-    /**
-     * ターゲットに指定したSpriteと一緒に移動します。
-     * @param {enchant.Sprite} target ターゲットを指定します。
-     * @example
-     * var target = new ExSprite(32, 32);
-     * core.rootScene.addChild(target);
-     *
-     * var sprite = new ExSprite(32, 32);
-     * sprite.follow(target);
-     * core.rootScene.addChild(sprite);
-     *
-     * target.tl.moveTo(10, 10, 10);
-     * //sprite.tl.moveTo(10, 10, 10);
-     *
-     */
-    follow: function(target) {
-        this.unfollow();
-        if (this._forrowBased == this.FORROW.RELATIVE_BASED) {
-            this.addEventListener(Event.ENTER_FRAME, function() {
-                this._followArg = arguments.callee;
-                this.x += target._moved[0];
-                this.y += target._moved[1];
-            });
-        } else {
-            this.addEventListener(Event.ENTER_FRAME, function() {
-                this._followArg = arguments.callee;
-                this.x += target._moved[0];
-                this.y += target._moved[1];
-            });
-        }
-    },
-    /**
-     * followを解除します。
-     */
-    unfollow: function() {
-        if (this._followArg) {
-            this.removeEventListener(Event.ENTER_FRAME, this._followArg);
-            this._followArg = null;
-        }
-    },
-    setForrowRelativeBased: function() {
-        this._forrowBased = this.FORROW.RELATIVE_BASED;
-    },
-    setForrowAbsoluteBased: function() {
-        this._forrowBased = this.FORROW.ABSOLUTE_BASED;
     },
     setCollisionIntersectBased: function() {
         this._collisionBased = this.COLLISION.INTERSECT_BASED;
