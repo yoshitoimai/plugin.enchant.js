@@ -283,7 +283,11 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
         this._addChildCollisionRect(this._collisionRect);
         this._addCollisionRect(x || this.width / 2 - width / 2, y || this.height / 2 - height / 2);
     },
-    _judgeCollision: function(target) {
+    _judgeCollision: function(target, moveX, moveY) {
+        var _moveX = 0;
+        var _moveY = 0;
+        if (moveX!==undefined) _moveX = moveX;
+        if (moveY!==undefined) _moveY = moveY;
         var result = false;
         var thisRect = this._collisionRect ? this._collisionRect : this;
         var targetRect = target._collisionRect ? target._collisionRect : target;
@@ -311,6 +315,14 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
             return _rect;
         };
         var _thisRect = thisRect.getOrientedBoundingRect();
+        _thisRect.leftTop[0] += _moveX;
+        _thisRect.rightTop[0] += _moveX;
+        _thisRect.leftBottom[0] += _moveX;
+        _thisRect.rightBottom[0] += _moveX;
+        _thisRect.leftTop[1] += _moveY;
+        _thisRect.rightTop[1] += _moveY;
+        _thisRect.leftBottom[1] += _moveY;
+        _thisRect.rightBottom[1] += _moveY;
         _thisRect = _addRect(_thisRect);
         var _targetRect = targetRect.getOrientedBoundingRect();
         _targetRect = _addRect(_targetRect);
