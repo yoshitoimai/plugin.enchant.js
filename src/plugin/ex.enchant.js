@@ -362,7 +362,7 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
             if (result) {
                 this._isCollision = true;
                 target._isCollisionState = true;
-                this._dispatchEventCollision(target);
+                this._dispatchEventCollision(target, true);
                 // Left
                 if (pos.left) {
                     this._isCollisionLeft = true;
@@ -394,7 +394,7 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
             if (result) {
                 this._isCollision = true;
                 target._isCollisionState = true;
-                this._dispatchEventCollision(target);
+                this._dispatchEventCollision(target, true);
                 // left
                 if (_targetRect.leftTop[0] < _thisRect.left[0] && _thisRect.left[0] < _targetRect.rightTop[0] &&
                     _targetRect.leftBottom[1] < _thisRect.left[1] && _thisRect.left[1] < _targetRect.rightBottom[1]) {
@@ -433,26 +433,26 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
             }
         }
         target._isCollisionState = false;
+        this._dispatchEventCollision(target, false);
         return false;
     },
-    _dispatchEventCollision: function(target) {
+    _dispatchEventCollision: function(target, isCollision) {
         var e;
         var existCount = this._collisionDuplicateObjects.indexOf(target);
-        if (existCount < 0) {
-            this._dispatchEventMakeCollision(target, enchant.Event.COLLISION);
-            this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_START);
-            this._collisionDuplicateObjects.push(target);
-            //ターゲットとの衝突がなくなったときイベント生成
-            this.addEventListener(Event.ENTER_FRAME, function() {
-                var _arg = arguments.callee;
-                if (!target._isCollisionState) {
-                    this._collisionDuplicateObjects.splice(existCount);
-                    this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_END);
-                    this.removeEventListener(Event.ENTER_FRAME, _arg);
-                }
-            });
+        if (isCollision) {
+            if (existCount < 0) {
+                this._dispatchEventMakeCollision(target, enchant.Event.COLLISION);
+                this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_START);
+                this._collisionDuplicateObjects.push(target);
+            }
+            this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TICK);
+        } else {
+            if (existCount >= 0) {
+                //ターゲットとの衝突がなくなったとき
+                this._collisionDuplicateObjects.splice(existCount);
+                this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_END);
+            }
         }
-        this._dispatchEventMakeCollision(target, enchant.Event.COLLISION_TICK);
     },
     _dispatchEventMakeCollision: function(target, collisionName) {
         e = new Event(collisionName);
