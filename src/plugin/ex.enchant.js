@@ -22,6 +22,10 @@ enchant.ex = {};
 enchant.Event = enchant.Event || {};
 
 /**
+ * 衝突が発生する前に発生するイベント。
+ */
+enchant.Event.BEFORE_COLLISION = 'beforecollision';
+/**
  * 衝突が開始したとき発生するイベント。
  */
 enchant.Event.COLLISION = 'collision';
@@ -105,6 +109,8 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
         enchant.Sprite.call(this, width, height);
 
         // collision
+        this._oldX = this.x;
+        this._oldY = this.y;
         this._collisionRect;
         this._isCollisionState = false;
         this._isCollision = false;
@@ -128,6 +134,8 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
 
         // Event Added to scene
         this.addEventListener(Event.ADDED_TO_SCENE, function(){
+            this._oldX = this.x;
+            this._oldY = this.y;
             var _rect = this.getOrientedBoundingRect();
             this._historyOffset[0] = _rect.leftTop;
             this._historyOffset[1] = _rect.leftTop;
@@ -164,6 +172,46 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
                     (function(_this, value) {
                         if (value instanceof Sprite && value._isContainedInCollection && !value.isCollisionIgnore || value instanceof Map) {
                             _this._judgeCollision(value);
+                            var x = _this.x - _this._oldX;
+                            var y = _this.y - _this._oldY;
+                            var e = new Event(enchant.Event.BEFORE_COLLISION);
+                            e.cancel = false;
+                            if (x < 0) {
+                                for (var i=0; i>=x; i--) {
+                                    if (_this._judgeCollision(value, i, 0)) {
+                                        _this.dispatchEvent(e);
+                                        if (e.cancel == true) _this.x = _this._oldX + i + 1;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (x > 0) {
+                                for (var i=0; i<=x; i++) {
+                                    if (_this._judgeCollision(value, i, 0)) {
+                                        _this.dispatchEvent(e);
+                                        if (e.cancel == true) _this.x = _this._oldX + i - 1;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (y < 0) {
+                                for (var i=0; i>=y; i--) {
+                                    if (_this._judgeCollision(value, 0, i)) {
+                                        _this.dispatchEvent(e);
+                                        if (e.cancel == true) _this.y = _this._oldY + i + 1;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (y > 0) {
+                                for (var i=0; i<=y; i++) {
+                                    if (_this._judgeCollision(value, 0, i)) {
+                                        _this.dispatchEvent(e);
+                                        if (e.cancel == true) _this.y = _this._oldY + i - 1;
+                                        break;
+                                    }
+                                }
+                            }
                         } else if (value instanceof Array) {
                             for (var i = 0; i < value.length; i++) {
                                 arguments.callee(_this, value[i]);
@@ -176,6 +224,8 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
                     })(this, this._collisionObjects[i]);
                 }
             }
+            this._oldX = this.x;
+            this._oldY = this.y;
         });
 
     },
