@@ -239,6 +239,14 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
             };
         }
     },
+    moved: {
+        get: function() {
+            return {
+                x: this.x - this._oldX,
+                y: this.y - this._oldY
+            };
+        }
+    },
     /**
      * 衝突判定の対象を設定します。
      * @type enchant.Sprite | enchant.Group | Array
