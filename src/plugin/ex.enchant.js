@@ -342,6 +342,7 @@ enchant.ex.ExSprite = enchant.Class.create(enchant.Sprite, {
         this._addCollisionRect(x || this.width / 2 - width / 2, y || this.height / 2 - height / 2);
     },
     _judgeCollision: function(target, moveX, moveY) {
+        if (this === target) return;
         var _moveX = 0;
         var _moveY = 0;
         if (moveX!==undefined) _moveX = moveX;
