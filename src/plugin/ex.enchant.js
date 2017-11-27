@@ -96,8 +96,8 @@ enchant.Sprite.prototype._initialize = enchant.Sprite.prototype.initialize;
 enchant.Sprite.prototype.initialize = function(width, height) {
     this._initialize(width, height);
     // collision
-    this._oldX = this.x;
-    this._oldY = this.y;
+    this._oldX = this._x;
+    this._oldY = this._y;
     this._collisionRect;
     this._isCollisionState = false;
     this._isCollision = false;
