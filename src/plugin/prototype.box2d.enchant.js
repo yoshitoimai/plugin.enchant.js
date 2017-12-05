@@ -5,6 +5,9 @@ enchant.box2d.PhySprite.prototype.remove = function() {
     this.destroy();
 };
 enchant.box2d.PhySprite.prototype.addForce = function(x, y) {
+    this.applyForce(new b2Vec2(x, y));
+};
+enchant.box2d.PhySprite.prototype.addImpulse = function(x, y) {
     this.applyImpulse(new b2Vec2(x, y));
 };
 enchant.box2d.PhySprite.prototype._judgeCollision = function(target, moveX, moveY) {
