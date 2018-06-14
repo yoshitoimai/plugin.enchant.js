@@ -1,6 +1,22 @@
 /**
  * box2d
  */
+Object.defineProperty(enchant.box2d.PhySprite.prototype, "linearDamping", {
+    get: function linearDamping() {
+        return this.body.m_body.m_linearDamping;
+    },
+    set: function linearDamping(number) {
+        this.body.m_body.m_linearDamping = number;
+    }
+});
+Object.defineProperty(enchant.box2d.PhySprite.prototype, "angularDamping", {
+    get: function angularDamping() {
+        return this.body.m_body.m_angularDamping;
+    },
+    set: function angularDamping(number) {
+        this.body.m_body.m_angularDamping = number;
+    }
+});
 enchant.box2d.PhySprite.prototype.remove = function() {
     this.destroy();
 };
