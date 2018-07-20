@@ -29,6 +29,9 @@ enchant.box2d.PhySprite.prototype.addImpulse = function(x, y) {
 enchant.box2d.PhySprite.prototype.addTorque = function(torque) {
     this.applyTorque(torque);
 };
+enchant.box2d.PhysicsWorld.prototype.getGravity = function() {
+    return this._world.GetGravity();
+};
 enchant.box2d.PhysicsWorld.prototype.setGravity = function(gravityX, gravityY) {
     this._world.SetGravity(new b2Vec2(gravityX, gravityY));
 };
