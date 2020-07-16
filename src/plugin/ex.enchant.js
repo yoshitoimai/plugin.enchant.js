@@ -147,74 +147,15 @@ enchant.Sprite.prototype.initialize = function(width, height) {
     });
 
     // judge collision Target
-    this.addEventListener(Event.ENTER_FRAME, function(){
-        this._isCollision = false;
-        this._isCollisionLeft = false;
-        this._isCollisionRight = false;
-        this._isCollisionTop = false;
-        this._isCollisionBottom = false;
+    this.addEventListener(Event.ENTER_FRAME, function () {
         // collision Sprite
-        if (this._collisionObjects.length > 0) {
-            for (var i = 0; i < this._collisionObjects.length; i++) {
-                (function(_this, value) {
-                    if (value instanceof Sprite && value._isContainedInCollection && !value.isCollisionIgnore || value instanceof Map) {
-                        _this._judgeCollision(value);
-                        var x = _this.x - _this._oldX;
-                        var y = _this.y - _this._oldY;
-                        var e = new Event(enchant.Event.BEFORE_COLLISION);
-                        e.cancel = false;
-                        if (x < 0) {
-                            for (var i=0; i>=x; i--) {
-                                if (_this._judgeCollision(value, i, 0)) {
-                                    _this.dispatchEvent(e);
-                                    if (e.cancel == true) _this.x = _this._oldX + i + 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (x > 0) {
-                            for (var i=0; i<=x; i++) {
-                                if (_this._judgeCollision(value, i, 0)) {
-                                    _this.dispatchEvent(e);
-                                    if (e.cancel == true) _this.x = _this._oldX + i - 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (y < 0) {
-                            for (var i=0; i>=y; i--) {
-                                if (_this._judgeCollision(value, 0, i)) {
-                                    _this.dispatchEvent(e);
-                                    if (e.cancel == true) _this.y = _this._oldY + i + 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (y > 0) {
-                            for (var i=0; i<=y; i++) {
-                                if (_this._judgeCollision(value, 0, i)) {
-                                    _this.dispatchEvent(e);
-                                    if (e.cancel == true) _this.y = _this._oldY + i - 1;
-                                    break;
-                                }
-                            }
-                        }
-                    } else if (value instanceof Array) {
-                        for (var i = 0; i < value.length; i++) {
-                            arguments.callee(_this, value[i]);
-                        }
-                    } else if (value instanceof Group) {
-                        for (var i = 0; i < value.childNodes.length; i++) {
-                            arguments.callee(_this, value.childNodes[i]);
-                        }
-                    }
-                })(this, this._collisionObjects[i]);
-            }
-        }
+        this.judgeCollision();
+
         this._oldX = this.x;
         this._oldY = this.y;
     });
 }
+
 Object.defineProperty(enchant.Sprite.prototype, "history", {
     get: function() {
         return {
@@ -326,6 +267,71 @@ enchant.Sprite.prototype.addCollisionRectSize = function(width, height, x, y) {
     this._collisionRect.isCollisionIgnore = true;
     this._addChildCollisionRect(this._collisionRect);
     this._addCollisionRect(x || this.width / 2 - width / 2, y || this.height / 2 - height / 2);
+};
+enchant.Sprite.prototype.judgeCollision = function () {
+    this._isCollision = false;
+    this._isCollisionLeft = false;
+    this._isCollisionRight = false;
+    this._isCollisionTop = false;
+    this._isCollisionBottom = false;
+    if (this._collisionObjects.length > 0) {
+        for (var i = 0; i < this._collisionObjects.length; i++) {
+            (function (_this, value) {
+                if (value instanceof Sprite && value._isContainedInCollection && !value.isCollisionIgnore || value instanceof Map) {
+                    _this._judgeCollision(value);
+                    var x = _this.x - _this._oldX;
+                    var y = _this.y - _this._oldY;
+                    var e = new Event(enchant.Event.BEFORE_COLLISION);
+                    e.cancel = false;
+                    if (x < 0) {
+                        for (var i = 0; i >= x; i--) {
+                            if (_this._judgeCollision(value, i, 0)) {
+                                _this.dispatchEvent(e);
+                                if (e.cancel == true) _this.x = _this._oldX + i + 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (x > 0) {
+                        for (var i = 0; i <= x; i++) {
+                            if (_this._judgeCollision(value, i, 0)) {
+                                _this.dispatchEvent(e);
+                                if (e.cancel == true) _this.x = _this._oldX + i - 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (y < 0) {
+                        for (var i = 0; i >= y; i--) {
+                            if (_this._judgeCollision(value, 0, i)) {
+                                _this.dispatchEvent(e);
+                                if (e.cancel == true) _this.y = _this._oldY + i + 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (y > 0) {
+                        for (var i = 0; i <= y; i++) {
+                            if (_this._judgeCollision(value, 0, i)) {
+                                _this.dispatchEvent(e);
+                                if (e.cancel == true) _this.y = _this._oldY + i - 1;
+                                break;
+                            }
+                        }
+                    }
+                } else if (value instanceof Array) {
+                    for (var i = 0; i < value.length; i++) {
+                        arguments.callee(_this, value[i]);
+                    }
+                } else if (value instanceof Group) {
+                    for (var i = 0; i < value.childNodes.length; i++) {
+                        arguments.callee(_this, value.childNodes[i]);
+                    }
+                }
+            })(this, this._collisionObjects[i]);
+        }
+    }
+    return this.isCollision;
 };
 enchant.Sprite.prototype._judgeCollision = function(target, moveX, moveY) {
     if (this === target) return;
