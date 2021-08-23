@@ -107,6 +107,7 @@ enchant.Sprite.prototype.initialize = function(width, height) {
     this._isCollisionBottom = false;
     this._collisionObjects = new Array();
     this._collisionDuplicateObjects = new Array();
+    this._isCollisionIgnore = false;
     // moved
     this._moved = [];
     // history
@@ -213,6 +214,18 @@ Object.defineProperty(enchant.Sprite.prototype, "isCollisionBottom", {
     }
 });
 /**
+ * 衝突を無視するか取得、設定します
+ */
+Object.defineProperty(enchant.Sprite.prototype, "isCollisionIgnore", {
+    get: function () {
+        return this._isCollisionIgnore;
+    },
+    set: function (value) {
+        this._isCollisionIgnore = value;
+    }
+});
+
+/**
  * 衝突判定を行うSpriteを追加します。
  * @param {enchant.Sprite | enchant.Group | Array} value 追加するSprite、またはそれを含むオブジェクト。
  */
@@ -277,7 +290,7 @@ enchant.Sprite.prototype.judgeCollision = function () {
     if (this._collisionObjects.length > 0) {
         for (var i = 0; i < this._collisionObjects.length; i++) {
             (function (_this, value) {
-                if (value instanceof Sprite && value._isContainedInCollection && !value.isCollisionIgnore || value instanceof Map) {
+                if (value instanceof Sprite && value._isContainedInCollection && !value._isCollisionIgnore && !_this._isCollisionIgnore || value instanceof Map) {
                     _this._judgeCollision(value);
                     var x = _this.x - _this._oldX;
                     var y = _this.y - _this._oldY;
