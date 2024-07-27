@@ -545,3 +545,197 @@ enchant.Sprite.prototype.setCollisionWithinBased = function() {
 };
 enchant.ex = {};
 enchant.ex.ExSprite = enchant.Sprite;
+
+/**
+ * ActionSprite
+ */
+enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
+    initialize: function (width, height) {
+        enchant.Sprite.call(this, width, height);
+        // gravity
+        this._gx = this._gy = 0;
+        // velocity
+        this._vx = this._vy = 0;
+        // max velocity
+        this._mvx = this._mvy = null;
+        // damping
+        this._dx = this._dy = null;
+
+        var entityGroup = new Group();
+        var outerTop = new Sprite(8, 1);
+        outerTop.centerX = this.width / 2;
+        outerTop.y = -outerTop.height;
+        entityGroup.addChild(outerTop);
+        var innerTop = new Sprite(8, 1);
+        innerTop.centerX = this.width / 2;
+        innerTop.y = 0;
+        entityGroup.addChild(innerTop);
+        var outerBottom = new Sprite(8, 1);
+        outerBottom.centerX = this.width / 2;
+        outerBottom.y = this.height;
+        entityGroup.addChild(outerBottom);
+        var innerBottom = new Sprite(8, 1);
+        innerBottom.centerX = this.width / 2;
+        innerBottom.y = this.height - innerBottom.height;
+        entityGroup.addChild(innerBottom);
+        var outerLeft = new Sprite(1, 16);
+        outerLeft.x = -outerLeft.width;
+        outerLeft.centerY = this.height / 2;
+        entityGroup.addChild(outerLeft);
+        var innerLeft = new Sprite(1, 16);
+        innerLeft.x = 0;
+        innerLeft.centerY = this.height / 2;
+        entityGroup.addChild(innerLeft);
+        var outerRight = new Sprite(1, 16);
+        outerRight.x = this.width;
+        outerRight.centerY = this.height / 2;
+        entityGroup.addChild(outerRight);
+        var innerRight = new Sprite(1, 16);
+        innerRight.x = this.width - innerRight.width;
+        innerRight.centerY = this.height / 2;
+        entityGroup.addChild(innerRight);
+        this._entityGroup = entityGroup;
+        this.addEventListener(Event.ADDED_TO_SCENE, function () {
+            this.parentNode.addChild(entityGroup);
+            // めり込み補正
+            this.parentNode.on(Event.RENDER, function () {
+                entityGroup.x = this.x;
+                entityGroup.y = this.y;
+                // Y軸補正
+                while (innerBottom.judgeCollision() === true) {
+                    entityGroup.y -= 0.1;
+                }
+                while (innerTop.judgeCollision() === true) {
+                    entityGroup.y += 0.1;
+                }
+                // X軸補正
+                if (this._gy === 0) {
+                    while (innerLeft.judgeCollision() == true) {
+                        entityGroup.x += 0.1;
+                    }
+                    while (innerRight.judgeCollision() == true) {
+                        entityGroup.x -= 0.1;
+                    }
+                } else {
+                    if (innerLeft.judgeCollision() == true) {
+                        entityGroup.x += 1;
+                    }
+                    if (innerRight.judgeCollision() == true) {
+                        entityGroup.x -= 1;
+                    }
+                }
+                this.x = entityGroup.x;
+                this.y = entityGroup.y;
+            }.bind(this));
+            this.on(Event.ENTER_FRAME, function () {
+                // X軸方向重力加算
+                if (this._mvx === null ||
+                    this._mvx > 0 && this._vx < this._mvx ||
+                    this._mvx < 0 && this._vx < this._mvx
+                ) this._vx += this._gx;
+                // Y軸方向重力加算
+                if (this._mvy === null ||
+                    this._mvy > 0 && this._vy < this._mvy ||
+                    this._mvy < 0 && this._vy < this._mvy
+                ) this._vy += this._gy;
+                // X軸方向の速度加算（左右非接触時）
+                if (this._vx < 0 && outerLeft.isCollision == false ||
+                    this._vx > 0 && outerRight.isCollision == false
+                ) {
+                    this.x += this._vx;
+                }
+                else {
+                    this._vx = 0;
+                }
+                // Y軸方向の速度加算（上下非接触時）
+                if (this._vy < 0 && outerTop.isCollision == false ||
+                    this._vy > 0 && outerBottom.isCollision == false
+                ) {
+                    this.y += this._vy;
+                }
+                else {
+                    this._vy = 0;
+                }
+                // 減衰
+                if (this._gx === 0) this._vx = this._damping(this._vx, this._dx);
+                if (this._gy === 0) this._vy = this._damping(this._vy, this._dy);
+            });
+        });
+    },
+    _damping(v, d) {
+        if (d === null) {
+            v = 0;
+        }
+        else {
+            if (v > 0) {
+                v = Math.max(v - d, 0);
+            } else if (v < 0) {
+                v = Math.min(v + d, 0);
+            }
+        }
+        return v;
+    },
+    gx: {
+        get: function () { return this._gx; },
+        set: function (gx) { this._gx = gx; }
+    },
+    gy: {
+        get: function () { return this._gy; },
+        set: function (gy) { this._gy = gy; }
+    },
+    vx: {
+        get: function () { return this._vx; },
+        set: function (vx) { this._vx = vx; }
+    },
+    vy: {
+        get: function () { return this._vy; },
+        set: function (vy) { this._vy = vy; }
+    },
+    setGravityX(gravityX) {
+        this._gx = gravityX;
+    },
+    setGravityY(gravityY) {
+        this._gy = gravityY;
+    },
+    setGravity(gravityX, gravityY) {
+        this.setGravityX(gravityX);
+        this.setGravityY(gravityY);
+    },
+    setMaxVelocityX(velocityX) {
+        this._mvx = Math.abs(velocityX);
+    },
+    setMaxVelocityY(velocityY) {
+        this._mvy = Math.abs(velocityY);
+    },
+    setMaxVelocity(velocityX, velocityY) {
+        this.setMaxVelocityX(velocityX);
+        this.setMaxVelocityY(velocityY);
+    },
+    setDampingX(dampingX = null) {
+        this._dx = dampingX;
+    },
+    setDampingY(dampingY = null) {
+        this._dy = dampingY;
+    },
+    setDamping(dampingX = null, dampingY = null) {
+        this.setDampingX(dampingX);
+        this.setDampingY(dampingY);
+    },
+    addPhysicsObject(target) {
+        this._entityGroup.childNodes.forEach(function (child) {
+            child.addCollision(target);
+        });
+    },
+    addImpulse(x, y) {
+        this._vx += x;
+        this._vy += y;
+        if (this._mvx !== null) {
+            if (this._vx > this._mvx) this._vx = this._mvx;
+            if (this._vx < -this._mvx) this._vx = -this._mvx;
+        }
+        if (this._mvy !== null) {
+            if (this._vy > this._mvy) this._vy = this._mvy;
+            if (this._vy < -this._mvy) this._vy = -this._mvy;
+        }
+    },
+});
