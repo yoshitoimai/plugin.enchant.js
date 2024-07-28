@@ -557,40 +557,43 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         // velocity
         this._vx = this._vy = 0;
         // max velocity
-        this._mvx = this._mvy = null;
+        this._max = this._may = null;
         // damping
         this._dx = this._dy = null;
 
+        this._sensorWidth = this.width - 2;
+        this._sensorHeight = this.height - 2;
+
         var entityGroup = new Group();
-        var outerTop = new Sprite(8, 1);
+        var outerTop = new Sprite(this._sensorWidth, 1);
         outerTop.centerX = this.width / 2;
         outerTop.y = -outerTop.height;
         entityGroup.addChild(outerTop);
-        var innerTop = new Sprite(8, 1);
+        var innerTop = new Sprite(this._sensorWidth, 1);
         innerTop.centerX = this.width / 2;
         innerTop.y = 0;
         entityGroup.addChild(innerTop);
-        var outerBottom = new Sprite(8, 1);
+        var outerBottom = new Sprite(this._sensorWidth, 1);
         outerBottom.centerX = this.width / 2;
         outerBottom.y = this.height;
         entityGroup.addChild(outerBottom);
-        var innerBottom = new Sprite(8, 1);
+        var innerBottom = new Sprite(this._sensorWidth, 1);
         innerBottom.centerX = this.width / 2;
         innerBottom.y = this.height - innerBottom.height;
         entityGroup.addChild(innerBottom);
-        var outerLeft = new Sprite(1, 16);
+        var outerLeft = new Sprite(1, this._sensorHeight);
         outerLeft.x = -outerLeft.width;
         outerLeft.centerY = this.height / 2;
         entityGroup.addChild(outerLeft);
-        var innerLeft = new Sprite(1, 16);
+        var innerLeft = new Sprite(1, this._sensorHeight);
         innerLeft.x = 0;
         innerLeft.centerY = this.height / 2;
         entityGroup.addChild(innerLeft);
-        var outerRight = new Sprite(1, 16);
+        var outerRight = new Sprite(1, this._sensorHeight);
         outerRight.x = this.width;
         outerRight.centerY = this.height / 2;
         entityGroup.addChild(outerRight);
-        var innerRight = new Sprite(1, 16);
+        var innerRight = new Sprite(1, this._sensorHeight);
         innerRight.x = this.width - innerRight.width;
         innerRight.centerY = this.height / 2;
         entityGroup.addChild(innerRight);
@@ -629,14 +632,14 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
             }.bind(this));
             this.on(Event.ENTER_FRAME, function () {
                 // X軸方向重力加算
-                if (this._mvx === null ||
-                    this._mvx > 0 && this._vx < this._mvx ||
-                    this._mvx < 0 && this._vx < this._mvx
+                if (this._max === null ||
+                    this._gx > 0 && this._vx < this._max ||
+                    this._gx < 0 && this._vx < this._max
                 ) this._vx += this._gx;
                 // Y軸方向重力加算
-                if (this._mvy === null ||
-                    this._mvy > 0 && this._vy < this._mvy ||
-                    this._mvy < 0 && this._vy < this._mvy
+                if (this._may === null ||
+                    this._gy > 0 && this._vy < this._may ||
+                    this._gy < 0 && this._vy < this._may
                 ) this._vy += this._gy;
                 // X軸方向の速度加算（左右非接触時）
                 if (this._vx < 0 && outerLeft.isCollision == false ||
@@ -701,15 +704,15 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         this.setGravityX(gravityX);
         this.setGravityY(gravityY);
     },
-    setMaxVelocityX(velocityX) {
-        this._mvx = Math.abs(velocityX);
+    setMaxAccelerationX(maxAccelerationX) {
+        this._max = maxAccelerationX;
     },
-    setMaxVelocityY(velocityY) {
-        this._mvy = Math.abs(velocityY);
+    setMaxAccelerationY(maxAccelerationY) {
+        this._may = maxAccelerationY;
     },
-    setMaxVelocity(velocityX, velocityY) {
-        this.setMaxVelocityX(velocityX);
-        this.setMaxVelocityY(velocityY);
+    setMaxAcceleration(maxAccelerationX, maxAccelerationY) {
+        this.setMaxAccelerationX(maxAccelerationX);
+        this.setMaxAccelerationY(maxAccelerationY);
     },
     setDampingX(dampingX = null) {
         this._dx = dampingX;
@@ -726,16 +729,4 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
             child.addCollision(target);
         });
     },
-    addImpulse(x, y) {
-        this._vx += x;
-        this._vy += y;
-        if (this._mvx !== null) {
-            if (this._vx > this._mvx) this._vx = this._mvx;
-            if (this._vx < -this._mvx) this._vx = -this._mvx;
-        }
-        if (this._mvy !== null) {
-            if (this._vy > this._mvy) this._vy = this._mvy;
-            if (this._vy < -this._mvy) this._vy = -this._mvy;
-        }
-    },
-});
+    });
