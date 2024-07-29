@@ -561,8 +561,8 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         // damping
         this._dx = this._dy = null;
 
-        this._sensorWidth = this.width - 2;
-        this._sensorHeight = this.height - 2;
+        this._sensorWidth = this.width - 4;
+        this._sensorHeight = this.height - 4;
 
         var entityGroup = new Group();
         var outerTop = new Sprite(this._sensorWidth, 1);
