@@ -599,6 +599,8 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         entityGroup.addChild(innerRight);
         this._entityGroup = entityGroup;
         this.addEventListener(Event.ADDED_TO_SCENE, function () {
+            entityGroup.x = this.x;
+            entityGroup.y = this.y;
             this.parentNode.addChild(entityGroup);
             // めり込み補正
             this.parentNode.on(Event.RENDER, function () {
@@ -729,4 +731,4 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
             child.addCollision(target);
         });
     },
-    });
+});
