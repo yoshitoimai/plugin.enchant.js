@@ -564,73 +564,83 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         this._sensorWidth = this.width - 4;
         this._sensorHeight = this.height - 4;
 
+        var childGroup = new Group();
+        this._childGroup = childGroup;
         var entityGroup = new Group();
-        var outerTop = new Sprite(this._sensorWidth, 1);
-        outerTop.centerX = this.width / 2;
-        outerTop.y = -outerTop.height;
-        entityGroup.addChild(outerTop);
-        var innerTop = new Sprite(this._sensorWidth, 1);
-        innerTop.centerX = this.width / 2;
-        innerTop.y = 0;
-        entityGroup.addChild(innerTop);
-        var outerBottom = new Sprite(this._sensorWidth, 1);
-        outerBottom.centerX = this.width / 2;
-        outerBottom.y = this.height;
-        entityGroup.addChild(outerBottom);
-        var innerBottom = new Sprite(this._sensorWidth, 1);
-        innerBottom.centerX = this.width / 2;
-        innerBottom.y = this.height - innerBottom.height;
-        entityGroup.addChild(innerBottom);
-        var outerLeft = new Sprite(1, this._sensorHeight);
-        outerLeft.x = -outerLeft.width;
-        outerLeft.centerY = this.height / 2;
-        entityGroup.addChild(outerLeft);
-        var innerLeft = new Sprite(1, this._sensorHeight);
-        innerLeft.x = 0;
-        innerLeft.centerY = this.height / 2;
-        entityGroup.addChild(innerLeft);
-        var outerRight = new Sprite(1, this._sensorHeight);
-        outerRight.x = this.width;
-        outerRight.centerY = this.height / 2;
-        entityGroup.addChild(outerRight);
-        var innerRight = new Sprite(1, this._sensorHeight);
-        innerRight.x = this.width - innerRight.width;
-        innerRight.centerY = this.height / 2;
-        entityGroup.addChild(innerRight);
+        childGroup.addChild(entityGroup);
         this._entityGroup = entityGroup;
+        var bounds = {
+            inner: {},
+            outer: {},
+        }
+        bounds.outer.top = new Sprite(this._sensorWidth, 1);
+        bounds.outer.top.centerX = this.width / 2;
+        bounds.outer.top.y = -bounds.outer.top.height;
+        entityGroup.addChild(bounds.outer.top);
+        bounds.inner.top = new Sprite(this._sensorWidth, this._sensorHeight / 2);
+        bounds.inner.top.centerX = this.width / 2;
+        bounds.inner.top.y = 0;
+        entityGroup.addChild(bounds.inner.top);
+        bounds.outer.bottom = new Sprite(this._sensorWidth, 1);
+        bounds.outer.bottom.centerX = this.width / 2;
+        bounds.outer.bottom.y = this.height;
+        entityGroup.addChild(bounds.outer.bottom);
+        bounds.inner.bottom = new Sprite(this._sensorWidth, this._sensorHeight / 2);
+        bounds.inner.bottom.centerX = this.width / 2;
+        bounds.inner.bottom.y = this.height - bounds.inner.bottom.height;
+        entityGroup.addChild(bounds.inner.bottom);
+        bounds.outer.left = new Sprite(1, this._sensorHeight);
+        bounds.outer.left.x = -bounds.outer.left.width;
+        bounds.outer.left.centerY = this.height / 2;
+        entityGroup.addChild(bounds.outer.left);
+        bounds.inner.left = new Sprite(this._sensorWidth / 2, this._sensorHeight);
+        bounds.inner.left.x = 0;
+        bounds.inner.left.centerY = this.height / 2;
+        entityGroup.addChild(bounds.inner.left);
+        bounds.outer.right = new Sprite(1, this._sensorHeight);
+        bounds.outer.right.x = this.width;
+        bounds.outer.right.centerY = this.height / 2;
+        entityGroup.addChild(bounds.outer.right);
+        bounds.inner.right = new Sprite(this._sensorWidth / 2, this._sensorHeight);
+        bounds.inner.right.x = this.width - bounds.inner.right.width;
+        bounds.inner.right.centerY = this.height / 2;
+        entityGroup.addChild(bounds.inner.right);
+        this.bounds = bounds;
         this.addEventListener(Event.ADDED_TO_SCENE, function () {
-            entityGroup.x = this.x;
-            entityGroup.y = this.y;
-            this.parentNode.addChild(entityGroup);
+            childGroup.x = this.x;
+            childGroup.y = this.y;
+            this.parentNode.addChild(childGroup);
             // めり込み補正
             this.parentNode.on(Event.RENDER, function () {
-                entityGroup.x = this.x;
-                entityGroup.y = this.y;
-                // Y軸補正
-                while (innerBottom.judgeCollision() === true) {
-                    entityGroup.y -= 0.1;
+                childGroup.x = this.x;
+                childGroup.y = this.y;
+                while (true) {
+                    var isCollision = {
+                        top: bounds.inner.top.judgeCollision(),
+                        bottom: bounds.inner.bottom.judgeCollision(),
+                        left: bounds.inner.left.judgeCollision(),
+                        right: bounds.inner.right.judgeCollision(),
+                    }
+                    if (new Set(Object.values(isCollision)).size === 1) {
+                        break;
+                    }
+                    else if (isCollision.top != isCollision.bottom) {
+                        if (isCollision.bottom) childGroup.y -= 0.1;
+                        if (isCollision.top) childGroup.y += 0.1;
+                    }
+                    else if (isCollision.left != isCollision.right) {
+                        if (isCollision.left) childGroup.x += 0.1;
+                        if (isCollision.right) childGroup.x -= 0.1;
+                    }
+                    else if (isCollision.top && isCollision.bottom) {
+                        childGroup.x += 0.1;
+                    }
+                    else if (isCollision.left && isCollision.right) {
+                        childGroup.y -= 0.1;
+                    }
                 }
-                while (innerTop.judgeCollision() === true) {
-                    entityGroup.y += 0.1;
-                }
-                // X軸補正
-                if (this._gy === 0) {
-                    while (innerLeft.judgeCollision() == true) {
-                        entityGroup.x += 0.1;
-                    }
-                    while (innerRight.judgeCollision() == true) {
-                        entityGroup.x -= 0.1;
-                    }
-                } else {
-                    if (innerLeft.judgeCollision() == true) {
-                        entityGroup.x += 1;
-                    }
-                    if (innerRight.judgeCollision() == true) {
-                        entityGroup.x -= 1;
-                    }
-                }
-                this.x = entityGroup.x;
-                this.y = entityGroup.y;
+                this.x = childGroup.x;
+                this.y = childGroup.y;
             }.bind(this));
             this.on(Event.ENTER_FRAME, function () {
                 // X軸方向重力加算
@@ -644,8 +654,8 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
                     this._gy < 0 && this._vy < this._may
                 ) this._vy += this._gy;
                 // X軸方向の速度加算（左右非接触時）
-                if (this._vx < 0 && outerLeft.isCollision == false ||
-                    this._vx > 0 && outerRight.isCollision == false
+                if (this._vx < 0 && bounds.outer.left.isCollision == false ||
+                    this._vx > 0 && bounds.outer.right.isCollision == false
                 ) {
                     this.x += this._vx;
                 }
@@ -653,8 +663,8 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
                     this._vx = 0;
                 }
                 // Y軸方向の速度加算（上下非接触時）
-                if (this._vy < 0 && outerTop.isCollision == false ||
-                    this._vy > 0 && outerBottom.isCollision == false
+                if (this._vy < 0 && bounds.outer.top.isCollision == false ||
+                    this._vy > 0 && bounds.outer.bottom.isCollision == false
                 ) {
                     this.y += this._vy;
                 }
@@ -666,6 +676,9 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
                 if (this._gy === 0) this._vy = this._damping(this._vy, this._dy);
             });
         });
+    },
+    addChild: function (child) {
+        this._childGroup.addChild(child);
     },
     _damping(v, d) {
         if (d === null) {
