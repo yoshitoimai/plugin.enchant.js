@@ -577,7 +577,7 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         bounds.outer.top.centerX = this.width / 2;
         bounds.outer.top.y = -bounds.outer.top.height;
         entityGroup.addChild(bounds.outer.top);
-        bounds.inner.top = new Sprite(this._sensorWidth, this._sensorHeight / 2);
+        bounds.inner.top = new Sprite(this._sensorWidth, this.height / 2);
         bounds.inner.top.centerX = this.width / 2;
         bounds.inner.top.y = 0;
         entityGroup.addChild(bounds.inner.top);
@@ -585,7 +585,7 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         bounds.outer.bottom.centerX = this.width / 2;
         bounds.outer.bottom.y = this.height;
         entityGroup.addChild(bounds.outer.bottom);
-        bounds.inner.bottom = new Sprite(this._sensorWidth, this._sensorHeight / 2);
+        bounds.inner.bottom = new Sprite(this._sensorWidth, this.height / 2);
         bounds.inner.bottom.centerX = this.width / 2;
         bounds.inner.bottom.y = this.height - bounds.inner.bottom.height;
         entityGroup.addChild(bounds.inner.bottom);
@@ -593,7 +593,7 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         bounds.outer.left.x = -bounds.outer.left.width;
         bounds.outer.left.centerY = this.height / 2;
         entityGroup.addChild(bounds.outer.left);
-        bounds.inner.left = new Sprite(this._sensorWidth / 2, this._sensorHeight);
+        bounds.inner.left = new Sprite(this.width / 2, this._sensorHeight);
         bounds.inner.left.x = 0;
         bounds.inner.left.centerY = this.height / 2;
         entityGroup.addChild(bounds.inner.left);
@@ -601,7 +601,7 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         bounds.outer.right.x = this.width;
         bounds.outer.right.centerY = this.height / 2;
         entityGroup.addChild(bounds.outer.right);
-        bounds.inner.right = new Sprite(this._sensorWidth / 2, this._sensorHeight);
+        bounds.inner.right = new Sprite(this.width / 2, this._sensorHeight);
         bounds.inner.right.x = this.width - bounds.inner.right.width;
         bounds.inner.right.centerY = this.height / 2;
         entityGroup.addChild(bounds.inner.right);
