@@ -611,6 +611,7 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
             this.parentNode.addChild(this._childGroup);
             // めり込み補正
             this.parentNode.on(Event.RENDER, function () {
+                if (this.age == 0) return;
                 this._childGroup.x = this.x;
                 this._childGroup.y = this.y;
                 while (true) {
