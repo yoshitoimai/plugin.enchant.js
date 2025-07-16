@@ -688,6 +688,9 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
                 if (this._gy === 0) this._vy = this._damping(this._vy, this._dy);
             });
         });
+        this.addEventListener(Event.REMOVED, function () {
+            this._childGroup.remove();
+        });
     },
     addChild: function (child) {
         this._childGroup.addChild(child);
