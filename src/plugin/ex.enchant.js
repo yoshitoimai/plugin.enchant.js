@@ -679,6 +679,7 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
 
         this._childGroup.x = this.x;
         this._childGroup.y = this.y;
+        var isAdjusted = false;
         while (true) {
             var c = {
                 i: {
@@ -698,29 +699,37 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
             if (c.i.t && !c.i.b && !c.o.b) {
                 this.y += 0.1;
                 isBreak = false;
+                isAdjusted = true;
             }
             if (c.i.b && !c.i.t && !c.o.t) {
                 this.y -= 0.1;
                 isBreak = false;
+                isAdjusted = true;
             }
             if (c.i.l && !c.i.r && !c.o.r) {
                 this.x += 0.1;
                 isBreak = false;
+                isAdjusted = true;
             }
             if (c.i.r && !c.i.l && !c.o.l) {
                 this.x -= 0.1;
                 isBreak = false;
+                isAdjusted = true;
             }
+
+            if (isBreak) {
+                break;
+            } else {
+                this._childGroup.x = this.x;
+                this._childGroup.y = this.y;
+            }
+        }
+        if (isAdjusted) {
+            this.x = Math.round(this.x);
+            this.y = Math.round(this.y);
             this._childGroup.x = this.x;
             this._childGroup.y = this.y;
-
-            if (isBreak) break;
-
         }
-        this.x = Math.round(this.x);
-        this.y = Math.round(this.y);
-        this._childGroup.x = this.x;
-        this._childGroup.y = this.y;
     },
     addChild: function (child) {
         this._childGroup.addChild(child);
