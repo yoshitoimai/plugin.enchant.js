@@ -627,16 +627,16 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
             ) this._vy += this._gy;
             // X軸方向の速度加算（左右非接触時）
             if (this._vx < 0 && bounds.outer.left.isCollision == false) {
-                for (var i = 0; i < Math.abs(this._vx); i++) {
-                    this.x += Math.sign(this._vx);
+                for (var i = 0; i < Math.abs(this._vx) * 10; i++) {
+                    this.x += Math.sign(this._vx) * 0.1;
                     if (bounds.outer.left.judgeCollision()) {
                         break;
                     }
                 }
             }
             else if (this._vx > 0 && bounds.outer.right.isCollision == false) {
-                for (var i = 0; i < Math.abs(this._vx); i++) {
-                    this.x += Math.sign(this._vx);
+                for (var i = 0; i < Math.abs(this._vx) * 10; i++) {
+                    this.x += Math.sign(this._vx) * 0.1;
                     if (bounds.outer.right.judgeCollision()) {
                         break;
                     }
@@ -647,16 +647,16 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
             }
             // Y軸方向の速度加算（上下非接触時）
             if (this._vy < 0 && bounds.outer.top.isCollision == false) {
-                for (var i = 0; i < Math.abs(this._vy); i++) {
-                    this.y += 1 * Math.sign(this._vy);
+                for (var i = 0; i < Math.abs(this._vy) * 10; i++) {
+                    this.y += Math.sign(this._vy) * 0.1;
                     if (bounds.outer.top.judgeCollision()) {
                         break;
                     }
                 }
             }
             else if (this._vy > 0 && bounds.outer.bottom.isCollision == false) {
-                for (var i = 0; i < Math.abs(this._vy); i++) {
-                    this.y += 1 * Math.sign(this._vy);
+                for (var i = 0; i < Math.abs(this._vy) * 10; i++) {
+                    this.y += Math.sign(this._vy) * 0.1;
                     if (bounds.outer.bottom.judgeCollision()) {
                         break;
                     }
