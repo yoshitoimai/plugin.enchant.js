@@ -106,6 +106,7 @@ enchant.Sprite.prototype.initialize = function(width, height) {
     this._isCollisionTop = false;
     this._isCollisionBottom = false;
     this._collisionObjects = new Array();
+    this._collisionIgnoreObjects = new Array();
     this._collisionDuplicateObjects = new Array();
     this._isCollisionIgnore = false;
     // moved
@@ -155,8 +156,7 @@ enchant.Sprite.prototype.initialize = function(width, height) {
         this._oldX = this.x;
         this._oldY = this.y;
     });
-}
-
+};
 Object.defineProperty(enchant.Sprite.prototype, "history", {
     get: function() {
         return {
@@ -213,10 +213,11 @@ Object.defineProperty(enchant.Sprite.prototype, "isCollisionBottom", {
         return this._isCollisionBottom;
     }
 });
+enchant.Node.prototype._isCollisionIgnore = false;
 /**
  * 衝突を無視するか取得、設定します
  */
-Object.defineProperty(enchant.Sprite.prototype, "isCollisionIgnore", {
+Object.defineProperty(enchant.Node.prototype, "isCollisionIgnore", {
     get: function () {
         return this._isCollisionIgnore;
     },
@@ -235,6 +236,14 @@ enchant.Sprite.prototype.addCollision = function(value) {
 enchant.Sprite.prototype.removeCollision = function(value) {
     if ((i = this._collisionObjects.indexOf(value)) !== -1) {
         this._collisionObjects.splice(i, 1);
+    }
+};
+enchant.Sprite.prototype.addCollisionIgnore = function (value) {
+    this._collisionIgnoreObjects.push(value);
+};
+enchant.Sprite.prototype.removeCollisionIgnore = function(value) {
+    if ((i = this._collisionIgnoreObjects.indexOf(value)) !== -1) {
+        this._collisionIgnoreObjects.splice(i, 1);
     }
 };
 enchant.Sprite.prototype._addChildCollisionRect = function(sprite) {
@@ -291,6 +300,13 @@ enchant.Sprite.prototype.judgeCollision = function () {
         for (var i = 0; i < this._collisionObjects.length; i++) {
             (function (_this, value) {
                 if (value instanceof Sprite && value._isContainedInCollection && !value._isCollisionIgnore && !_this._isCollisionIgnore || value instanceof Map) {
+                    if (_this._collisionIgnoreObjects.length > 0) {
+                        if (_this._collisionIgnoreObjects.some(function (obj) {
+                            return obj == value;
+                        })) {
+                            return;
+                        }
+                    }
                     _this._judgeCollision(value);
                     var x = _this.x - _this._oldX;
                     var y = _this.y - _this._oldY;
@@ -336,7 +352,7 @@ enchant.Sprite.prototype.judgeCollision = function () {
                     for (var i = 0; i < value.length; i++) {
                         arguments.callee(_this, value[i]);
                     }
-                } else if (value instanceof Group) {
+                } else if (value && value.childNodes && value.isCollisionIgnore !== true) {
                     for (var i = 0; i < value.childNodes.length; i++) {
                         arguments.callee(_this, value.childNodes[i]);
                     }
@@ -551,6 +567,7 @@ enchant.ex.ExSprite = enchant.Sprite;
  */
 enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
     initialize: function (width, height) {
+        this.childNodes = [];
         enchant.Sprite.call(this, width, height);
         // gravity
         this._gx = this._gy = 0;
@@ -564,9 +581,8 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         this._sensorWidth = this.width - 4;
         this._sensorHeight = this.height - 4;
 
-        this._childGroup = new Group();
         var colliderGroup = new Group();
-        this._childGroup.addChild(colliderGroup);
+        colliderGroup.isCollisionIgnore = true;
         var bounds = {
             inner: {},
             outer: {},
@@ -578,6 +594,7 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         bounds.inner.top = new Sprite(this._sensorWidth, 1);
         bounds.inner.top.centerX = this.width / 2;
         bounds.inner.top.y = 0;
+        bounds.inner.top.addCollisionIgnore(this);
         colliderGroup.addChild(bounds.inner.top);
         bounds.outer.bottom = new Sprite(this._sensorWidth, 1);
         bounds.outer.bottom.centerX = this.width / 2;
@@ -586,6 +603,7 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         bounds.inner.bottom = new Sprite(this._sensorWidth, 1);
         bounds.inner.bottom.centerX = this.width / 2;
         bounds.inner.bottom.y = this.height - bounds.inner.bottom.height;
+        bounds.inner.bottom.addCollisionIgnore(this);
         colliderGroup.addChild(bounds.inner.bottom);
         bounds.outer.left = new Sprite(1, this._sensorHeight);
         bounds.outer.left.x = -bounds.outer.left.width;
@@ -594,6 +612,7 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         bounds.inner.left = new Sprite(1, this._sensorHeight);
         bounds.inner.left.x = 0;
         bounds.inner.left.centerY = this.height / 2;
+        bounds.inner.left.addCollisionIgnore(this);
         colliderGroup.addChild(bounds.inner.left);
         bounds.outer.right = new Sprite(1, this._sensorHeight);
         bounds.outer.right.x = this.width;
@@ -602,85 +621,93 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         bounds.inner.right = new Sprite(1, this._sensorHeight);
         bounds.inner.right.x = this.width - bounds.inner.right.width;
         bounds.inner.right.centerY = this.height / 2;
+        bounds.inner.right.addCollisionIgnore(this);
         colliderGroup.addChild(bounds.inner.right);
         this.bounds = bounds;
         this._colliderGroup = colliderGroup;
-        this._boundAdjustOverlap = this._adjustOverlap.bind(this);
-        this.addEventListener(Event.ADDED, function () {
-            this._childGroup.x = this.x;
-            this._childGroup.y = this.y;
-            this._parentNode = this.parentNode;
-            this.parentNode.addChild(this._childGroup);
-            // めり込み補正
-            this.parentNode.addEventListener(Event.RENDER, this._boundAdjustOverlap);
-        });
-        this.on(Event.ENTER_FRAME, function () {
-            // X軸方向加速度加算
-            if (this._max === null ||
-                this._gx > 0 && this._vx < this._max ||
-                this._gx < 0 && this._vx < this._max
-            ) this._vx += this._gx;
-            // Y軸方向加速度加算
-            if (this._may === null ||
-                this._gy > 0 && this._vy < this._may ||
-                this._gy < 0 && this._vy < this._may
-            ) this._vy += this._gy;
-            // X軸方向の速度加算（左右非接触時）
-            if (this._vx < 0 && bounds.outer.left.isCollision == false) {
-                for (var i = 0; i < Math.abs(this._vx) * 10; i++) {
-                    this.x += Math.sign(this._vx) * 0.1;
-                    if (bounds.outer.left.judgeCollision()) {
-                        break;
-                    }
-                }
-            }
-            else if (this._vx > 0 && bounds.outer.right.isCollision == false) {
-                for (var i = 0; i < Math.abs(this._vx) * 10; i++) {
-                    this.x += Math.sign(this._vx) * 0.1;
-                    if (bounds.outer.right.judgeCollision()) {
-                        break;
-                    }
-                }
-            }
-            else {
-                this._vx = 0;
-            }
-            // Y軸方向の速度加算（上下非接触時）
-            if (this._vy < 0 && bounds.outer.top.isCollision == false) {
-                for (var i = 0; i < Math.abs(this._vy) * 10; i++) {
-                    this.y += Math.sign(this._vy) * 0.1;
-                    if (bounds.outer.top.judgeCollision()) {
-                        break;
-                    }
-                }
-            }
-            else if (this._vy > 0 && bounds.outer.bottom.isCollision == false) {
-                for (var i = 0; i < Math.abs(this._vy) * 10; i++) {
-                    this.y += Math.sign(this._vy) * 0.1;
-                    if (bounds.outer.bottom.judgeCollision()) {
-                        break;
-                    }
-                }
-            }
-            else {
-                this._vy = 0;
-            }
-            // 減衰
-            if (this._gx === 0) this._vx = this._damping(this._vx, this._dx);
-            if (this._gy === 0) this._vy = this._damping(this._vy, this._dy);
-        });
+        [enchant.Event.ADDED_TO_SCENE, enchant.Event.REMOVED_FROM_SCENE]
+            .forEach(function (event) {
+                this.addEventListener(event, function (e) {
+                    this.childNodes.forEach(function (child) {
+                        child.scene = this.scene;
+                        child.dispatchEvent(e);
+                    }, this);
+                });
+            }, this);
+        this.addChild(this._colliderGroup);
+        var core = enchant.Core.instance;
+        this._updateMotionBound = this._updateMotion.bind(this);
+        this._adjustOverlapBound = this._adjustOverlap.bind(this);
+        // 速度に応じて移動
+        core.on(Event.EXIT_FRAME, this._updateMotionBound);
+        // めり込み補正
+        core.on(Event.EXIT_FRAME, this._adjustOverlapBound);
+        // 削除されたとき
         this.addEventListener(Event.REMOVED, function () {
-            this._parentNode.removeEventListener(Event.RENDER, this._boundAdjustOverlap);
-            this._childGroup.remove();
+            core.removeEventListener(Event.EXIT_FRAME, this._updateMotionBound);
+            core.removeEventListener(Event.EXIT_FRAME, this._adjustOverlapBound);
         });
+    },
+    _updateMotion() {
+        // X軸方向加速度加算
+        if (this._max === null ||
+            this._gx > 0 && this._vx < this._max ||
+            this._gx < 0 && this._vx < this._max
+        ) this._vx += this._gx;
+        // Y軸方向加速度加算
+        if (this._may === null ||
+            this._gy > 0 && this._vy < this._may ||
+            this._gy < 0 && this._vy < this._may
+        ) this._vy += this._gy;
+        // X軸方向の速度加算（左右非接触時）
+        if (this._vx < 0 && !this.bounds.outer.left.judgeCollision()) {
+            for (var i = 0; i < Math.abs(this._vx) * 2; i++) {
+                this.x += Math.sign(this._vx) * 0.5;
+                if (this.bounds.outer.left.judgeCollision()) break;
+            }
+        }
+        else if (this._vx > 0 && !this.bounds.outer.right.judgeCollision()) {
+            for (var i = 0; i < Math.abs(this._vx) * 2; i++) {
+                this.x += Math.sign(this._vx) * 0.5;
+                if (this.bounds.outer.right.judgeCollision()) break;
+            }
+        } else {
+            this._vx = 0;
+        }
+        // Y軸方向の速度加算（上下非接触時）
+        if (this._vy < 0 && !this.bounds.outer.top.judgeCollision()) {
+            for (var i = 0; i < Math.abs(this._vy) * 2; i++) {
+                this.y += Math.sign(this._vy) * 0.5;
+                if (this.bounds.outer.top.judgeCollision()) break;
+            }
+        }
+        else if (this._vy > 0 && !this.bounds.outer.bottom.judgeCollision()) {
+            for (var i = 0; i < Math.abs(this._vy) * 2; i++) {
+                this.y += Math.sign(this._vy) * 0.5;
+                if (this.bounds.outer.bottom.judgeCollision()) break;
+            }
+        } else {
+            this._vy = 0;
+        }
+        // 減衰
+        if (this._gx === 0) this._vx = this._damping(this._vx, this._dx);
+        if (this._gy === 0) this._vy = this._damping(this._vy, this._dy);
     },
     _adjustOverlap() {
         if (this.age == 0) return;
-
-        this._childGroup.x = this.x;
-        this._childGroup.y = this.y;
-        var isAdjusted = false;
-        while (true) {
+        var maxIterations = 200;
+        var iterations = 0;
+        var lastPosition = { x: this.x, y: this.y };
+        var stuckCount = 0;
+        while (iterations < maxIterations) {
+            iterations++;
+            if (Math.abs(this.x - lastPosition.x) < 0.01 && Math.abs(this.y - lastPosition.y) < 0.01) {
+                stuckCount++;
+                if (stuckCount > 10) break;
+            } else {
+                stuckCount = 0;
+                lastPosition = { x: this.x, y: this.y };
+            }
             var c = {
                 i: {
                     t: this.bounds.inner.top.judgeCollision(),
@@ -695,44 +722,59 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
                     r: this.bounds.outer.right.judgeCollision(),
                 }
             }
-            var isBreak = true;
-            if (c.i.t && !c.i.b && !c.o.b) {
-                this.y += 0.1;
-                isBreak = false;
-                isAdjusted = true;
-            }
-            if (c.i.b && !c.i.t && !c.o.t) {
-                this.y -= 0.1;
-                isBreak = false;
-                isAdjusted = true;
-            }
-            if (c.i.l && !c.i.r && !c.o.r) {
-                this.x += 0.1;
-                isBreak = false;
-                isAdjusted = true;
-            }
-            if (c.i.r && !c.i.l && !c.o.l) {
-                this.x -= 0.1;
-                isBreak = false;
-                isAdjusted = true;
-            }
-
-            if (isBreak) {
-                break;
-            } else {
-                this._childGroup.x = this.x;
-                this._childGroup.y = this.y;
-            }
-        }
-        if (isAdjusted) {
-            this.x = Math.round(this.x);
-            this.y = Math.round(this.y);
-            this._childGroup.x = this.x;
-            this._childGroup.y = this.y;
+            if (c.i.t && !c.o.b) this.y += 0.5;
+            if (c.i.b && !c.o.t) this.y -= 0.5;
+            if (c.i.l && !c.o.r) this.x += 0.5;
+            if (c.i.r && !c.o.l) this.x -= 0.5;
+            if (this.x === lastPosition.x && this.y === lastPosition.y) break;
         }
     },
-    addChild: function (child) {
-        this._childGroup.addChild(child);
+    _dirty: {
+        get: function () {
+            return this.__dirty;
+        },
+        set: function (dirty) {
+            dirty = !!dirty;
+            this.__dirty = dirty;
+            if (dirty) {
+                for (var i = 0, l = this.childNodes.length; i < l; i++) {
+                    this.childNodes[i]._dirty = true;
+                }
+            }
+        }
+    },
+    addChild: function (node) {
+        if (node.parentNode) {
+            node.parentNode.removeChild(node);
+        }
+        this.childNodes.push(node);
+        node.parentNode = this;
+        var childAdded = new enchant.Event('childadded');
+        childAdded.node = node;
+        childAdded.next = null;
+        this.dispatchEvent(childAdded);
+        node.dispatchEvent(new enchant.Event('added'));
+        if (this.scene) {
+            node.scene = this.scene;
+            var addedToScene = new enchant.Event('addedtoscene');
+            node.dispatchEvent(addedToScene);
+        }
+    },
+    removeChild: function (node) {
+        var i;
+        if ((i = this.childNodes.indexOf(node)) !== -1) {
+            this.childNodes.splice(i, 1);
+            node.parentNode = null;
+            var childRemoved = new enchant.Event('childremoved');
+            childRemoved.node = node;
+            this.dispatchEvent(childRemoved);
+            node.dispatchEvent(new enchant.Event('removed'));
+            if (this.scene) {
+                node.scene = null;
+                var removedFromScene = new enchant.Event('removedfromscene');
+                node.dispatchEvent(removedFromScene);
+            }
+        }
     },
     _damping(v, d) {
         if (d === null) {
