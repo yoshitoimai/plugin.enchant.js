@@ -573,7 +573,9 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         this._gx = this._gy = 0;
         // velocity
         this._vx = this._vy = 0;
-        // max velocity
+        // max gravity
+        this._mgx = this._mgy = null;
+        // max acceleration
         this._max = this._may = null;
         // damping
         this._dx = this._dy = null;
@@ -650,48 +652,59 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
     },
     _updateMotion() {
         // X軸方向加速度加算
-        if (this._max === null ||
-            this._gx > 0 && this._vx < this._max ||
-            this._gx < 0 && this._vx < this._max
+        if (this._mgx === null ||
+            this._gx > 0 && this._vx < this._mgx ||
+            this._gx < 0 && this._vx < this._mgx
         ) this._vx += this._gx;
+        // X軸方向最大速度制限
+        if (this._mvx !== null) {
+            if (this._vx > this._mvx) this._vx = this._mvx;
+            if (this._vx < -this._mvx) this._vx = -this._mvx;
+        }
         // Y軸方向加速度加算
-        if (this._may === null ||
-            this._gy > 0 && this._vy < this._may ||
-            this._gy < 0 && this._vy < this._may
+        if (this._mgy === null ||
+            this._gy > 0 && this._vy < this._mgy ||
+            this._gy < 0 && this._vy < this._mgy
         ) this._vy += this._gy;
+        // Y軸方向最大速度制限
+        if (this._mvy !== null) {
+            if (this._vy > this._mvy) this._vy = this._mvy;
+            if (this._vy < -this._mvy) this._vy = -this._mvy;
+        }
         // X軸方向の速度加算（左右非接触時）
         if (this._vx < 0 && !this.bounds.outer.left.judgeCollision()) {
-            for (var i = 0; i < Math.abs(this._vx) * 2; i++) {
-                this.x += Math.sign(this._vx) * 0.5;
-                if (this.bounds.outer.left.judgeCollision()) break;
-            }
+            this._remainingMove("x", this.bounds.outer.left);
         }
         else if (this._vx > 0 && !this.bounds.outer.right.judgeCollision()) {
-            for (var i = 0; i < Math.abs(this._vx) * 2; i++) {
-                this.x += Math.sign(this._vx) * 0.5;
-                if (this.bounds.outer.right.judgeCollision()) break;
-            }
+            this._remainingMove("x", this.bounds.outer.right);
         } else {
             this._vx = 0;
         }
         // Y軸方向の速度加算（上下非接触時）
         if (this._vy < 0 && !this.bounds.outer.top.judgeCollision()) {
-            for (var i = 0; i < Math.abs(this._vy) * 2; i++) {
-                this.y += Math.sign(this._vy) * 0.5;
-                if (this.bounds.outer.top.judgeCollision()) break;
-            }
+            this._remainingMove("y", this.bounds.outer.top);
         }
         else if (this._vy > 0 && !this.bounds.outer.bottom.judgeCollision()) {
-            for (var i = 0; i < Math.abs(this._vy) * 2; i++) {
-                this.y += Math.sign(this._vy) * 0.5;
-                if (this.bounds.outer.bottom.judgeCollision()) break;
-            }
+            this._remainingMove("y", this.bounds.outer.bottom);
         } else {
             this._vy = 0;
         }
         // 減衰
         if (this._gx === 0) this._vx = this._damping(this._vx, this._dx);
         if (this._gy === 0) this._vy = this._damping(this._vy, this._dy);
+    },
+    _remainingMove(axis, collider) {
+        var sign = Math.sign(this["_v" + axis]);
+        var rm = Math.abs(this["_v" + axis]);
+        while (rm >= 0.5) {
+            this[axis] += sign * 0.5;
+            if (collider.judgeCollision()) {
+                rm = 0;
+                break;
+            }
+            rm -= 0.5;
+        }
+        this[axis] += sign * rm;
     },
     _adjustOverlap() {
         if (this.age == 0) return;
@@ -797,6 +810,14 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         get: function () { return this._gy; },
         set: function (gy) { this._gy = gy; }
     },
+    mgx: {
+        get: function () { return this._mgx; },
+        set: function (mgx) { this._mgx = mgx; }
+    },
+    mgy: {
+        get: function () { return this._mgy; },
+        set: function (mgy) { this._mgy = mgy; }
+    },
     vx: {
         get: function () { return this._vx; },
         set: function (vx) { this._vx = vx; }
@@ -804,6 +825,22 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
     vy: {
         get: function () { return this._vy; },
         set: function (vy) { this._vy = vy; }
+    },
+    mvx: {
+        get: function () { return this._mvx; },
+        set: function (mvx) { this._mvx = mvx; }
+    },
+    mvy: {
+        get: function () { return this._mvy; },
+        set: function (mvy) { this._mvy = mvy; }
+    },
+    dx: {
+        get: function () { return this._dx; },
+        set: function (dx) { this._dx = dx; }
+    },
+    dy: {
+        get: function () { return this._dy; },
+        set: function (dy) { this._dy = dy; }
     },
     setGravityX(gravityX) {
         this._gx = gravityX;
@@ -816,10 +853,10 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         this.setGravityY(gravityY);
     },
     setMaxAccelerationX(maxAccelerationX) {
-        this._max = maxAccelerationX;
+        this._mgx = maxAccelerationX;
     },
     setMaxAccelerationY(maxAccelerationY) {
-        this._may = maxAccelerationY;
+        this._mgy = maxAccelerationY;
     },
     setMaxAcceleration(maxAccelerationX, maxAccelerationY) {
         this.setMaxAccelerationX(maxAccelerationX);
