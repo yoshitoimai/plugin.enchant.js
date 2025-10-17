@@ -636,16 +636,15 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
                     }, this);
                 });
             }, this);
-        this.addChild(this._colliderGroup);
         var core = enchant.Core.instance;
         this._updateMotionBound = this._updateMotion.bind(this);
         this._adjustOverlapBound = this._adjustOverlap.bind(this);
-        // 速度に応じて移動
-        core.on(Event.EXIT_FRAME, this._updateMotionBound);
-        // めり込み補正
-        core.on(Event.EXIT_FRAME, this._adjustOverlapBound);
-        // 削除されたとき
-        this.addEventListener(Event.REMOVED, function () {
+        this.addEventListener(Event.ADDED_TO_SCENE, function () {
+            this.addChild(this._colliderGroup);
+            core.on(Event.EXIT_FRAME, this._updateMotionBound);
+            core.on(Event.EXIT_FRAME, this._adjustOverlapBound);
+        });
+        this.addEventListener(Event.REMOVED_FROM_SCENE, function () {
             core.removeEventListener(Event.EXIT_FRAME, this._updateMotionBound);
             core.removeEventListener(Event.EXIT_FRAME, this._adjustOverlapBound);
         });
