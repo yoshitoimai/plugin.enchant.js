@@ -96,3 +96,25 @@ enchant.box2d.PhySprite.prototype._judgeCollision = function(target, moveX, move
     this._dispatchEventCollision(target, false);
     return false;
 };
+
+/**
+ * ジョイント
+ */
+var b2WeldJointDef = Box2D.Dynamics.Joints.b2WeldJointDef
+enchant.PhyWeldJoint = enchant.Class.create(enchant.BaseJoint, {
+    /**
+    * 溶接ジョイント
+    * @example
+    * @param {enchant.PhySprite} [sprite1] 繋げるスプライト1
+    * @param {enchant.PhySprite} [sprite2] 繋げるスプライト2
+    * @constructs
+    * @extends enchant.BaseJoint
+    */
+    initialize: function (sprite1, sprite2) {
+        enchant.BaseJoint.call(this, sprite1, sprite2);
+
+        var jointDef = new b2WeldJointDef();
+        jointDef.Initialize(sprite1.body.m_body, sprite2.body.m_body, sprite1.body.m_body.GetPosition());
+        this.joint = world.CreateJoint(jointDef);
+    }
+});
