@@ -637,16 +637,29 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
                 });
             }, this);
         var core = enchant.Core.instance;
-        this._updateMotionBound = this._updateMotion.bind(this);
-        this._adjustOverlapBound = this._adjustOverlap.bind(this);
+        this._dispatchExitframe = function () {
+            this._updateMotion();
+            this._adjustOverlap();
+        }.bind(this);
+        this._addExitFrameListener = function () {
+            core.addEventListener(Event.EXIT_FRAME, this._dispatchExitframe);
+        }.bind(this);
+        this._removeExitFrameListener = function () {
+            core.removeEventListener(Event.EXIT_FRAME, this._dispatchExitframe);
+        }.bind(this);
         this.addEventListener(Event.ADDED_TO_SCENE, function () {
             this.addChild(this._colliderGroup);
-            core.on(Event.EXIT_FRAME, this._updateMotionBound);
-            core.on(Event.EXIT_FRAME, this._adjustOverlapBound);
+            if (this.scene.age > 0) {
+                this._addExitFrameListener();
+            }
+            this.scene.addEventListener(Event.ENTER, this._addExitFrameListener);
+            this.scene.addEventListener(Event.EXIT, this._removeExitFrameListener);
         });
-        this.addEventListener(Event.REMOVED_FROM_SCENE, function () {
-            core.removeEventListener(Event.EXIT_FRAME, this._updateMotionBound);
-            core.removeEventListener(Event.EXIT_FRAME, this._adjustOverlapBound);
+        this.addEventListener(Event.REMOVED, function () {
+            this.removeChild(this._colliderGroup);
+            this._removeExitFrameListener();
+            this.scene.removeEventListener(Event.ENTER, this._addExitFrameListener);
+            this.scene.removeEventListener(Event.EXIT, this._removeExitFrameListener);
         });
     },
     _updateMotion() {
