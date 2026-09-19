@@ -230,8 +230,10 @@ Object.defineProperty(enchant.Node.prototype, "isCollisionIgnore", {
  * 衝突判定を行うSpriteを追加します。
  * @param {enchant.Sprite | enchant.Group | Array} value 追加するSprite、またはそれを含むオブジェクト。
  */
-enchant.Sprite.prototype.addCollision = function(value) {
-    this._collisionObjects.push(value);
+enchant.Sprite.prototype.addCollision = function (value) {
+    if ((this._collisionObjects.indexOf(value)) === -1) {
+        this._collisionObjects.push(value);
+    }
 };
 enchant.Sprite.prototype.removeCollision = function(value) {
     if ((i = this._collisionObjects.indexOf(value)) !== -1) {
@@ -239,7 +241,9 @@ enchant.Sprite.prototype.removeCollision = function(value) {
     }
 };
 enchant.Sprite.prototype.addCollisionIgnore = function (value) {
-    this._collisionIgnoreObjects.push(value);
+    if ((this._collisionIgnoreObjects.indexOf(value)) === -1) {
+        this._collisionIgnoreObjects.push(value);
+    }
 };
 enchant.Sprite.prototype.removeCollisionIgnore = function(value) {
     if ((i = this._collisionIgnoreObjects.indexOf(value)) !== -1) {
@@ -299,14 +303,14 @@ enchant.Sprite.prototype.judgeCollision = function () {
     if (this._collisionObjects.length > 0) {
         for (var i = 0; i < this._collisionObjects.length; i++) {
             (function (_this, value) {
-                if (value instanceof Sprite && value._isContainedInCollection && !value._isCollisionIgnore && !_this._isCollisionIgnore || value instanceof Map) {
-                    if (_this._collisionIgnoreObjects.length > 0) {
-                        if (_this._collisionIgnoreObjects.some(function (obj) {
-                            return obj == value;
-                        })) {
-                            return;
-                        }
+                if (_this._collisionIgnoreObjects.length > 0) {
+                    if (_this._collisionIgnoreObjects.some(function (obj) {
+                        return obj == value;
+                    })) {
+                        return;
                     }
+                }
+                if (value instanceof Sprite && value._isContainedInCollection && !value._isCollisionIgnore && !_this._isCollisionIgnore || value instanceof Map) {
                     _this._judgeCollision(value);
                     var x = _this.x - _this._oldX;
                     var y = _this.y - _this._oldY;
@@ -571,6 +575,7 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         enchant.Sprite.call(this, width, height);
         // gravity
         this._gx = this._gy = 0;
+        this._isGravityEnabled = true;
         // velocity
         this._vx = this._vy = 0;
         // max gravity
@@ -663,21 +668,23 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         });
     },
     _updateMotion() {
-        // X軸方向加速度加算
-        if (this._mgx === null ||
-            this._gx > 0 && this._vx < this._mgx ||
-            this._gx < 0 && this._vx < this._mgx
-        ) this._vx += this._gx;
+        if (this._isGravityEnabled) {
+            // X軸方向加速度加算
+            if (this._mgx === null ||
+                this._gx > 0 && this._vx < this._mgx ||
+                this._gx < 0 && this._vx < this._mgx
+            ) this._vx += this._gx;
+            // Y軸方向加速度加算
+            if (this._mgy === null ||
+                this._gy > 0 && this._vy < this._mgy ||
+                this._gy < 0 && this._vy < this._mgy
+            ) this._vy += this._gy;
+        }
         // X軸方向最大速度制限
         if (this._mvx !== null) {
             if (this._vx > this._mvx) this._vx = this._mvx;
             if (this._vx < -this._mvx) this._vx = -this._mvx;
         }
-        // Y軸方向加速度加算
-        if (this._mgy === null ||
-            this._gy > 0 && this._vy < this._mgy ||
-            this._gy < 0 && this._vy < this._mgy
-        ) this._vy += this._gy;
         // Y軸方向最大速度制限
         if (this._mvy !== null) {
             if (this._vy > this._mvy) this._vy = this._mvy;
@@ -702,8 +709,8 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
             this._vy = 0;
         }
         // 減衰
-        if (this._gx === 0) this._vx = this._damping(this._vx, this._dx);
-        if (this._gy === 0) this._vy = this._damping(this._vy, this._dy);
+        if (this._gx === 0 || this._isGravityEnabled === false) this._vx = this._damping(this._vx, this._dx);
+        if (this._gy === 0 || this._isGravityEnabled === false) this._vy = this._damping(this._vy, this._dy);
     },
     _remainingMove(axis, collider) {
         var sign = Math.sign(this["_v" + axis]);
@@ -822,6 +829,10 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
         get: function () { return this._gy; },
         set: function (gy) { this._gy = gy; }
     },
+    isGravityEnabled: {
+        get: function () { return this._isGravityEnabled; },
+        set: function (isGravityEnabled) { this._isGravityEnabled = isGravityEnabled; }
+    },
     mgx: {
         get: function () { return this._mgx; },
         set: function (mgx) { this._mgx = mgx; }
@@ -887,6 +898,21 @@ enchant.ActionSprite = enchant.Class.create(enchant.Sprite, {
     addPhysicsObject(target) {
         this._colliderGroup.childNodes.forEach(function (child) {
             child.addCollision(target);
+        });
+    },
+    removePhysicsObject(target) {
+        this._colliderGroup.childNodes.forEach(function (child) {
+            child.removeCollision(target);
+        });
+    },
+    addPhysicsObjectIgnore(target) {
+        this._colliderGroup.childNodes.forEach(function (child) {
+            child.addCollisionIgnore(target);
+        });
+    },
+    removePhysicsObjectIgnore(target) {
+        this._colliderGroup.childNodes.forEach(function (child) {
+            child.removeCollisionIgnore(target);
         });
     },
 });
