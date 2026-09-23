@@ -148,13 +148,14 @@ enchant.Sprite.prototype.initialize = function(width, height) {
         }
     });
 
-    // judge collision Target
     this.addEventListener(Event.ENTER_FRAME, function () {
-        // collision Sprite
-        this.judgeCollision();
-
         this._oldX = this.x;
         this._oldY = this.y;
+    });
+
+    // judge collision Target
+    this.addEventListener(Event.RENDER, function () {
+        this.judgeCollision();
     });
 };
 Object.defineProperty(enchant.Sprite.prototype, "history", {
